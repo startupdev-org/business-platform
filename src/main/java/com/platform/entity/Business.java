@@ -63,7 +63,7 @@ public class Business {
     private List<Employee> employees;
 
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Service> services;
+    private List<ProvidedService> providedServices;
 
     @PrePersist
     protected void onCreate() {

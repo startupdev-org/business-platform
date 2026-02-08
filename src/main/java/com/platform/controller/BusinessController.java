@@ -4,9 +4,6 @@ import com.platform.dto.business.BusinessRequestDTO;
 import com.platform.dto.business.BusinessResponseDTO;
 import com.platform.entity.User;
 import com.platform.service.BusinessService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,13 +19,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/business")
 @RequiredArgsConstructor
-@Tag(name = "Business", description = "Business management endpoints")
 public class BusinessController {
 
     private final BusinessService businessService;
 
     @GetMapping
-    @Operation(summary = "List all businesses with optional filters")
     public ResponseEntity<Page<BusinessResponseDTO>> listBusinesses(
             @RequestParam(required = false) String city,
             @RequestParam(required = false) Double minRating,
@@ -39,22 +34,18 @@ public class BusinessController {
     }
 
     @GetMapping("/slug/{slug}")
-    @Operation(summary = "Get business by slug")
     public ResponseEntity<BusinessResponseDTO> getBySlug(@PathVariable String slug) {
         BusinessResponseDTO business = businessService.getBusinessBySlug(slug);
         return ResponseEntity.ok(business);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get business by ID")
     public ResponseEntity<BusinessResponseDTO> getById(@PathVariable UUID id) {
         BusinessResponseDTO business = businessService.getBusinessById(id);
         return ResponseEntity.ok(business);
     }
 
     @PostMapping
-    @SecurityRequirement(name = "Bearer Authentication")
-    @Operation(summary = "Create new business")
     public ResponseEntity<BusinessResponseDTO> createBusiness(
             @Valid @RequestBody BusinessRequestDTO request,
             Authentication authentication) {
@@ -64,8 +55,6 @@ public class BusinessController {
     }
 
     @PutMapping("/{id}")
-    @SecurityRequirement(name = "Bearer Authentication")
-    @Operation(summary = "Update business")
     public ResponseEntity<BusinessResponseDTO> updateBusiness(
             @PathVariable UUID id,
             @Valid @RequestBody BusinessRequestDTO request,
@@ -76,8 +65,6 @@ public class BusinessController {
     }
 
     @DeleteMapping("/{id}")
-    @SecurityRequirement(name = "Bearer Authentication")
-    @Operation(summary = "Delete business")
     public ResponseEntity<Void> deleteBusiness(
             @PathVariable UUID id,
             Authentication authentication) {
@@ -87,8 +74,6 @@ public class BusinessController {
     }
 
     @GetMapping("/user/my-businesses")
-    @SecurityRequirement(name = "Bearer Authentication")
-    @Operation(summary = "Get current user's businesses")
     public ResponseEntity<List<BusinessResponseDTO>> getUserBusinesses(Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
         List<BusinessResponseDTO> businesses = businessService.getUserBusinesses(currentUser.getId());

@@ -14,14 +14,14 @@ psql --version        # Should be 12+
 # Create database
 createdb beauty_booking
 
-# Or if using remote PostgreSQL, update .env with connection details
+# Or if using remote PostgreSQL, update secrets.properties with connection details
 ```
 
 ### Step 3: Configure Environment
 ```bash
-cp .env.example .env
+cp secrets.properties.dev secrets.properties
 
-# Edit .env with your database credentials:
+# Edit secrets.properties with your database credentials:
 # DB_HOST=localhost
 # DB_PORT=5432
 # DB_NAME=beauty_booking
@@ -140,7 +140,7 @@ curl -X POST http://localhost:8080/api/business/{businessId}/employee \
 
 **4. Add Services**
 ```bash
-curl -X POST http://localhost:8080/api/business/{businessId}/service \
+curl -X POST http://localhost:8080/api/business/{businessId}/providedService \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your_token>" \
   -d '{
@@ -212,7 +212,7 @@ http://localhost:8080/swagger-ui.html
 pg_isready -h localhost -p 5432
 
 # Or start PostgreSQL
-sudo service postgresql start  # Linux
+sudo providedService postgresql start  # Linux
 brew services start postgresql  # macOS
 ```
 
@@ -225,7 +225,7 @@ lsof -i :8080
 # Kill process (macOS/Linux)
 kill -9 <PID>
 
-# Or change port in .env
+# Or change port in secrets.properties
 SERVER_PORT=8081
 ```
 
@@ -235,7 +235,7 @@ SERVER_PORT=8081
 # Generate secure secret (min 32 chars)
 openssl rand -base64 32
 
-# Update .env
+# Update secrets.properties
 JWT_SECRET=<generated_secret>
 ```
 

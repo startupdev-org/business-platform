@@ -2,6 +2,8 @@
 
 A production-ready Java Spring Boot backend for a SaaS beauty and barbershop appointment booking platform.
 
+# The docs can be seen [here](http://localhost:8080/swagger-ui/index.html)
+
 ## Features
 
 - **User Management**: Platform admin and business admin roles
@@ -40,7 +42,7 @@ src/main/java/com/platform/
 ├── exception/           # Exception handling
 ├── repository/          # Spring Data JPA repositories
 ├── security/            # JWT authentication filter
-├── service/             # Business logic layer
+├── providedService/             # Business logic layer
 └── utils/               # Utility classes
 ```
 
@@ -64,7 +66,7 @@ cd beauty-booking-platform
 Copy `.env.example` to `.env` and configure your database:
 
 ```bash
-cp .env.example .env
+cp secrets.properties.dev secrets.properties
 ```
 
 Update `.env` with your PostgreSQL credentials:
@@ -127,11 +129,11 @@ The application will start at `http://localhost:8080`
 - `DELETE /api/business/:businessId/employee/:employeeId` - Delete employee
 
 ### Services
-- `GET /api/business/:businessId/service` - List services
-- `GET /api/business/:businessId/service/active` - List active services
-- `POST /api/business/:businessId/service` - Create service
-- `PUT /api/business/:businessId/service/:serviceId` - Update service
-- `DELETE /api/business/:businessId/service/:serviceId` - Delete service
+- `GET /api/business/:businessId/providedService` - List services
+- `GET /api/business/:businessId/providedService/active` - List active services
+- `POST /api/business/:businessId/providedService` - Create providedService
+- `PUT /api/business/:businessId/providedService/:serviceId` - Update providedService
+- `DELETE /api/business/:businessId/providedService/:serviceId` - Delete providedService
 
 ### Bookings
 - `POST /api/booking` - Create booking (no auth required)
@@ -190,11 +192,11 @@ Authorization: Bearer <your_jwt_token>
 ## Key Features Explained
 
 ### Time Slot Generation
-Generate available time slots based on service duration:
+Generate available time slots based on providedService duration:
 ```java
 List<LocalDateTime> slots = TimeSlotGenerator.generateAvailableSlots(
     LocalDateTime.now(),
-    60 // service duration in minutes
+    60 // providedService duration in minutes
 );
 ```
 

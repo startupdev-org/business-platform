@@ -17,7 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Service {
+public class ProvidedService {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -48,7 +48,7 @@ public class Service {
     @JoinColumn(name = "business_id", nullable = false)
     private Business business;
 
-    @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "providedService", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookings;
 
     @PrePersist

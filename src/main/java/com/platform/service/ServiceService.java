@@ -3,7 +3,7 @@ package com.platform.service;
 import com.platform.dto.service.ServiceRequestDTO;
 import com.platform.dto.service.ServiceResponseDTO;
 import com.platform.entity.Business;
-import com.platform.entity.Service;
+import com.platform.entity.ProvidedService;
 import com.platform.entity.User;
 import com.platform.exception.BusinessException;
 import com.platform.exception.ResourceNotFoundException;
@@ -31,7 +31,7 @@ public class ServiceService {
 
         validateBusinessOwnership(business, currentUser);
 
-        Service service = Service.builder()
+        ProvidedService providedService = ProvidedService.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .price(dto.getPrice())
@@ -40,14 +40,14 @@ public class ServiceService {
                 .business(business)
                 .build();
 
-        service = serviceRepository.save(service);
-        return toDTO(service);
+        providedService = serviceRepository.save(providedService);
+        return toDTO(providedService);
     }
 
     public ServiceResponseDTO getService(UUID id) {
-        Service service = serviceRepository.findById(id)
+        ProvidedService providedService = serviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
-        return toDTO(service);
+        return toDTO(providedService);
     }
 
     public List<ServiceResponseDTO> getBusinessServices(UUID businessId) {
@@ -71,19 +71,19 @@ public class ServiceService {
 
         validateBusinessOwnership(business, currentUser);
 
-        Service service = serviceRepository.findById(serviceId)
+        ProvidedService providedService = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
-        service.setName(dto.getName());
-        service.setDescription(dto.getDescription());
-        service.setPrice(dto.getPrice());
-        service.setDurationMinutes(dto.getDurationMinutes());
+        providedService.setName(dto.getName());
+        providedService.setDescription(dto.getDescription());
+        providedService.setPrice(dto.getPrice());
+        providedService.setDurationMinutes(dto.getDurationMinutes());
         if (dto.getActive() != null) {
-            service.setActive(dto.getActive());
+            providedService.setActive(dto.getActive());
         }
 
-        service = serviceRepository.save(service);
-        return toDTO(service);
+        providedService = serviceRepository.save(providedService);
+        return toDTO(providedService);
     }
 
     @Transactional
@@ -93,10 +93,10 @@ public class ServiceService {
 
         validateBusinessOwnership(business, currentUser);
 
-        Service service = serviceRepository.findById(serviceId)
+        ProvidedService providedService = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
-        serviceRepository.delete(service);
+        serviceRepository.delete(providedService);
     }
 
     private void validateBusinessOwnership(Business business, User currentUser) {
@@ -106,17 +106,17 @@ public class ServiceService {
         }
     }
 
-    private ServiceResponseDTO toDTO(Service service) {
+    private ServiceResponseDTO toDTO(ProvidedService providedService) {
         return ServiceResponseDTO.builder()
-                .id(service.getId())
-                .name(service.getName())
-                .description(service.getDescription())
-                .price(service.getPrice())
-                .durationMinutes(service.getDurationMinutes())
-                .businessId(service.getBusiness().getId())
-                .active(service.getActive())
-                .createdAt(service.getCreatedAt())
-                .updatedAt(service.getUpdatedAt())
+                .id(providedService.getId())
+                .name(providedService.getName())
+                .description(providedService.getDescription())
+                .price(providedService.getPrice())
+                .durationMinutes(providedService.getDurationMinutes())
+                .businessId(providedService.getBusiness().getId())
+                .active(providedService.getActive())
+                .createdAt(providedService.getCreatedAt())
+                .updatedAt(providedService.getUpdatedAt())
                 .build();
     }
 }

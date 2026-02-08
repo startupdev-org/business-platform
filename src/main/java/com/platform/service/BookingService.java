@@ -4,8 +4,7 @@ import com.platform.dto.booking.BookingRequestDTO;
 import com.platform.dto.booking.BookingResponseDTO;
 import com.platform.entity.Booking;
 import com.platform.entity.Employee;
-import com.platform.entity.Service;
-import com.platform.entity.User;
+import com.platform.entity.ProvidedService;
 import com.platform.exception.BusinessException;
 import com.platform.exception.ResourceNotFoundException;
 import com.platform.repository.BookingRepository;
@@ -33,10 +32,10 @@ public class BookingService {
         Employee employee = employeeRepository.findById(dto.getEmployeeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
-        Service service = serviceRepository.findById(dto.getServiceId())
+        ProvidedService providedService = serviceRepository.findById(dto.getServiceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
 
-        LocalDateTime endTime = dto.getStartTime().plusMinutes(service.getDurationMinutes());
+        LocalDateTime endTime = dto.getStartTime().plusMinutes(providedService.getDurationMinutes());
 
         List<Booking> conflictingBookings = bookingRepository.findByEmployeeAndDateRange(
                 dto.getEmployeeId(),
@@ -54,7 +53,7 @@ public class BookingService {
                 .startTime(dto.getStartTime())
                 .endTime(endTime)
                 .employee(employee)
-                .service(service)
+                .providedService(providedService)
                 .status(Booking.BookingStatus.CONFIRMED)
                 .build();
 
@@ -129,7 +128,7 @@ public class BookingService {
                 .customerPhone(booking.getCustomerPhone())
                 .customerEmail(booking.getCustomerEmail())
                 .employeeId(booking.getEmployee().getId())
-                .serviceId(booking.getService().getId())
+                .serviceId(booking.getProvidedService().getId())
                 .startTime(booking.getStartTime())
                 .endTime(booking.getEndTime())
                 .status(booking.getStatus().name())
