@@ -1,0 +1,140 @@
+package com.platform.service;
+
+import com.platform.dto.booking.BookingRequestDTO;
+import com.platform.dto.booking.BookingResponseDTO;
+import com.platform.entity.Booking;
+import com.platform.entity.Employee;
+import com.platform.entity.Service;
+import com.platform.entity.User;
+import com.platform.exception.BusinessException;
+import com.platform.exception.ResourceNotFoundException;
+import com.platform.repository.BookingRepository;
+import com.platform.repository.EmployeeRepository;
+import com.platform.repository.ServiceRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class BookingService {
+
+    private final BookingRepository bookingRepository;
+    private final EmployeeRepository employeeRepository;
+    private final ServiceRepository serviceRepository;
+
+    @Transactional
+    public BookingResponseDTO createBooking(BookingRequestDTO dto) {
+        Employee employee = employeeRepository.findById(dto.getEmployeeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+
+        Service service = serviceRepository.findById(dto.getServiceId())
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
+
+        LocalDateTime endTime = dto.getStartTime().plusMinutes(service.getDurationMinutes());
+
+        List<Booking> conflictingBookings = bookingRepository.findByEmployeeAndDateRange(
+                dto.getEmployeeId(),
+                dto.getStartTime(),
+                endTime);
+
+        if (!conflictingBookings.isEmpty()) {
+            throw new BusinessException("Employee not available at this time");
+        }
+
+        Booking booking = Booking.builder()
+                .customerName(dto.getCustomerName())
+                .customerPhone(dto.getCustomerPhone())
+                .customerEmail(dto.getCustomerEmail())
+                .startTime(dto.getStartTime())
+                .endTime(endTime)
+                .employee(employee)
+                .service(service)
+                .status(Booking.BookingStatus.CONFIRMED)
+                .build();
+
+        booking = bookingRepository.save(booking);
+        return toDTO(booking);
+    }
+
+    public BookingResponseDTO getBooking(UUID id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+        return toDTO(booking);
+    }
+
+    public List<BookingResponseDTO> listBookings(UUID employeeId, Booking.BookingStatus status) {
+        List<Booking> bookings;
+        if (employeeId != null && status != null) {
+            bookings = bookingRepository.findByEmployeeId(employeeId);
+            bookings = bookings.stream()
+                    .filter(b -> b.getStatus().equals(status))
+                    .collect(Collectors.toList());
+        } else if (employeeId != null) {
+            bookings = bookingRepository.findByEmployeeId(employeeId);
+        } else if (status != null) {
+            bookings = bookingRepository.findByStatus(status);
+        } else {
+            bookings = bookingRepository.findAll();
+        }
+        return bookings.stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    public List<BookingResponseDTO> getEmployeeBookings(UUID employeeId, LocalDateTime startDate, LocalDateTime endDate) {
+        return bookingRepository.findByEmployeeAndDateRange(employeeId, startDate, endDate)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public BookingResponseDTO updateBookingStatus(UUID id, Booking.BookingStatus newStatus) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+
+        booking.setStatus(newStatus);
+        booking = bookingRepository.save(booking);
+        return toDTO(booking);
+    }
+
+    @Transactional
+    public void cancelBooking(UUID id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+
+        if (booking.getStatus().equals(Booking.BookingStatus.COMPLETED)) {
+            throw new BusinessException("Cannot cancel a completed booking");
+        }
+
+        booking.setStatus(Booking.BookingStatus.CANCELLED);
+        bookingRepository.save(booking);
+    }
+
+    public List<BookingResponseDTO> getBusinessBookings(UUID businessId, Booking.BookingStatus status) {
+        return bookingRepository.findByBusinessAndStatus(businessId, status)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    private BookingResponseDTO toDTO(Booking booking) {
+        return BookingResponseDTO.builder()
+                .id(booking.getId())
+                .customerName(booking.getCustomerName())
+                .customerPhone(booking.getCustomerPhone())
+                .customerEmail(booking.getCustomerEmail())
+                .employeeId(booking.getEmployee().getId())
+                .serviceId(booking.getService().getId())
+                .startTime(booking.getStartTime())
+                .endTime(booking.getEndTime())
+                .status(booking.getStatus().name())
+                .createdAt(booking.getCreatedAt())
+                .updatedAt(booking.getUpdatedAt())
+                .build();
+    }
+}

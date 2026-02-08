@@ -1,0 +1,144 @@
+package com.platform.service;
+
+import com.platform.dto.business.BusinessRequestDTO;
+import com.platform.dto.business.BusinessResponseDTO;
+import com.platform.entity.Business;
+import com.platform.entity.User;
+import com.platform.exception.BusinessException;
+import com.platform.exception.ResourceNotFoundException;
+import com.platform.repository.BusinessRepository;
+import com.platform.repository.ReviewRepository;
+import com.platform.utils.SlugGenerator;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class BusinessService {
+
+    private final BusinessRepository businessRepository;
+    private final ReviewRepository reviewRepository;
+
+    @Transactional
+    public BusinessResponseDTO createBusiness(BusinessRequestDTO dto, User owner) {
+        String slug = SlugGenerator.generate(dto.getName());
+        if (businessRepository.findBySlug(slug).isPresent()) {
+            slug = slug + "-" + UUID.randomUUID().toString().substring(0, 8);
+        }
+
+        Business business = Business.builder()
+                .name(dto.getName())
+                .slug(slug)
+                .description(dto.getDescription())
+                .address(dto.getAddress())
+                .city(dto.getCity())
+                .phone(dto.getPhone())
+                .website(dto.getWebsite())
+                .logoUrl(dto.getLogoUrl())
+                .coverImageUrl(dto.getCoverImageUrl())
+                .owner(owner)
+                .build();
+
+        business = businessRepository.save(business);
+        return toDTO(business);
+    }
+
+    public BusinessResponseDTO getBusinessById(UUID id) {
+        Business business = businessRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+        return toDTO(business);
+    }
+
+    public BusinessResponseDTO getBusinessBySlug(String slug) {
+        Business business = businessRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+        return toDTO(business);
+    }
+
+    public Page<BusinessResponseDTO> listBusinesses(String city, Double minRating, Pageable pageable) {
+        List<Business> businesses;
+        if (city != null && minRating != null) {
+            businesses = businessRepository.findByFilters(city, minRating);
+        } else if (city != null) {
+            businesses = businessRepository.findByCity(city);
+        } else {
+            businesses = businessRepository.findAll();
+        }
+
+        return new PageImpl<>(
+                businesses.stream().map(this::toDTO).collect(Collectors.toList()),
+                pageable,
+                businesses.size());
+    }
+
+    @Transactional
+    public BusinessResponseDTO updateBusiness(UUID id, BusinessRequestDTO dto, User currentUser) {
+        Business business = businessRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+
+        if (!business.getOwner().getId().equals(currentUser.getId()) &&
+            !currentUser.getRole().equals(User.UserRole.PLATFORM_ADMIN)) {
+            throw new BusinessException("Unauthorized");
+        }
+
+        business.setName(dto.getName());
+        business.setDescription(dto.getDescription());
+        business.setAddress(dto.getAddress());
+        business.setCity(dto.getCity());
+        business.setPhone(dto.getPhone());
+        business.setWebsite(dto.getWebsite());
+        business.setLogoUrl(dto.getLogoUrl());
+        business.setCoverImageUrl(dto.getCoverImageUrl());
+
+        business = businessRepository.save(business);
+        return toDTO(business);
+    }
+
+    @Transactional
+    public void deleteBusiness(UUID id, User currentUser) {
+        Business business = businessRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+
+        if (!business.getOwner().getId().equals(currentUser.getId()) &&
+            !currentUser.getRole().equals(User.UserRole.PLATFORM_ADMIN)) {
+            throw new BusinessException("Unauthorized");
+        }
+
+        businessRepository.delete(business);
+    }
+
+    public List<BusinessResponseDTO> getUserBusinesses(UUID userId) {
+        return businessRepository.findByOwnerId(userId)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    private BusinessResponseDTO toDTO(Business business) {
+        Double averageRating = reviewRepository.getAverageRatingByBusiness(business.getId());
+
+        return BusinessResponseDTO.builder()
+                .id(business.getId())
+                .name(business.getName())
+                .slug(business.getSlug())
+                .description(business.getDescription())
+                .address(business.getAddress())
+                .city(business.getCity())
+                .phone(business.getPhone())
+                .website(business.getWebsite())
+                .logoUrl(business.getLogoUrl())
+                .coverImageUrl(business.getCoverImageUrl())
+                .ratingOverall(averageRating != null ? averageRating : 0.0)
+                .createdAt(business.getCreatedAt())
+                .updatedAt(business.getUpdatedAt())
+                .build();
+    }
+}
