@@ -279,7 +279,7 @@ mvn clean package -DskipTests
 
 ### For Development (Auto-managed by Hibernate)
 ```yaml
-# application-dev.yml
+# application-test-dev.yml
 jpa:
   hibernate:
     ddl-auto: create-drop  # Creates tables on startup, drops on shutdown
