@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,12 +26,17 @@ public class BusinessService {
     private final BusinessRepository businessRepository;
     private final ReviewRepository reviewRepository;
 
+    private static final String BUSINESS_EXCEPTION = "Business not found";
+
     @Transactional
     public BusinessResponseDTO createBusiness(BusinessRequestDTO dto, User owner) {
         String slug = SlugGenerator.generate(dto.getName());
         if (businessRepository.findBySlug(slug).isPresent()) {
             slug = slug + "-" + UUID.randomUUID().toString().substring(0, 8);
         }
+
+        if (!owner.getRole().equals(User.UserRole.BUSINESS_ADMIN))
+            throw new BusinessException("Just business admin can create new businesses");
 
         Business business = Business.builder()
                 .name(dto.getName())
@@ -53,13 +57,13 @@ public class BusinessService {
 
     public BusinessResponseDTO getBusinessById(UUID id) {
         Business business = businessRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
         return toDTO(business);
     }
 
     public BusinessResponseDTO getBusinessBySlug(String slug) {
         Business business = businessRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
         return toDTO(business);
     }
 
@@ -74,7 +78,7 @@ public class BusinessService {
         }
 
         return new PageImpl<>(
-                businesses.stream().map(this::toDTO).collect(Collectors.toList()),
+                businesses.stream().map(this::toDTO).toList(),
                 pageable,
                 businesses.size());
     }
@@ -82,7 +86,7 @@ public class BusinessService {
     @Transactional
     public BusinessResponseDTO updateBusiness(UUID id, BusinessRequestDTO dto, User currentUser) {
         Business business = businessRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
 
         if (!business.getOwner().getId().equals(currentUser.getId()) &&
             !currentUser.getRole().equals(User.UserRole.PLATFORM_ADMIN)) {
@@ -105,7 +109,7 @@ public class BusinessService {
     @Transactional
     public void deleteBusiness(UUID id, User currentUser) {
         Business business = businessRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
 
         if (!business.getOwner().getId().equals(currentUser.getId()) &&
             !currentUser.getRole().equals(User.UserRole.PLATFORM_ADMIN)) {
@@ -119,7 +123,7 @@ public class BusinessService {
         return businessRepository.findByOwnerId(userId)
                 .stream()
                 .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private BusinessResponseDTO toDTO(Business business) {

@@ -39,6 +39,9 @@ server:
   servlet:
     context-path: /
 
+
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS}
 #springdoc:
 #  swagger-ui:
 #    path: /swagger-ui.html
