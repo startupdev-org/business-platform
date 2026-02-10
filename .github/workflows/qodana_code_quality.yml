@@ -21,6 +21,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+
+      - name: Setup JDK
+        uses: actions/checkout@v4
+        with:
+          java-version: '18'
+          distribution: 'temurin'
+          cache: maven
+            
+      # Build Maven project
+      - name: Build project with Maven
+        run: mvn clean package -DskipTests
+
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
