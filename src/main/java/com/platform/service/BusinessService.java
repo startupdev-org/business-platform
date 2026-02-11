@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,15 +27,19 @@ public class BusinessService {
 
     private final BusinessRepository businessRepository;
     private final ReviewRepository reviewRepository;
+    private final UserService userService;
 
     private static final String BUSINESS_EXCEPTION = "Business not found";
 
     @Transactional
-    public BusinessResponseDTO createBusiness(BusinessRequestDTO dto, User owner) {
+    public BusinessResponseDTO createBusiness(BusinessRequestDTO dto) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = (String) auth.getPrincipal();
+
+        User owner = getUserByUsername(username);
+
         String slug = SlugGenerator.generate(dto.getName());
-        if (businessRepository.findBySlug(slug).isPresent()) {
-            slug = slug + "-" + UUID.randomUUID().toString().substring(0, 8);
-        }
 
         if (!owner.getRole().equals(User.UserRole.BUSINESS_ADMIN))
             throw new BusinessException("Just business admin can create new businesses");
@@ -144,5 +150,9 @@ public class BusinessService {
                 .createdAt(business.getCreatedAt())
                 .updatedAt(business.getUpdatedAt())
                 .build();
+    }
+
+    private User getUserByUsername(String username) {
+        return userService.getUserByUsername(username);
     }
 }

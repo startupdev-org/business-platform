@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.*;
 
 import com.platform.dto.business.BusinessRequestDTO;
 import com.platform.dto.business.BusinessResponseDTO;
@@ -87,9 +86,6 @@ class BusinessServiceTest {
         User owner = createBusinessAdmin();
         BusinessRequestDTO dto = createRequest();
 
-        when(businessRepository.findBySlug(any()))
-                .thenReturn(Optional.empty());
-
         when(businessRepository.save(any()))
                 .thenAnswer(i -> i.getArgument(0));
 
@@ -97,12 +93,23 @@ class BusinessServiceTest {
                 .thenReturn(5.0);
 
         BusinessResponseDTO response =
-                businessService.createBusiness(dto, owner);
+                businessService.createBusiness(dto);
 
         assertNotNull(response);
         assertEquals(dto.getName(), response.getName());
 
         verify(businessRepository).save(any());
+    }
+
+    @Test
+    void createBusiness_error() {
+
+        User platformAdmin = createPlatformAdmin();
+        BusinessRequestDTO dto = createRequest();
+
+        assertThrows(BusinessException.class, () -> businessService.createBusiness(dto));
+
+        verify(businessRepository, never()).save(any());
     }
 
     // ----------------------------

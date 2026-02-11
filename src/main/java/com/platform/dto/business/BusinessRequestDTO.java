@@ -1,5 +1,6 @@
 package com.platform.dto.business;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -29,9 +30,12 @@ public class BusinessRequestDTO {
     @NotBlank(message = "Phone is required")
     private String phone;
 
+    @Nullable
     private String website;
 
+    @Nullable
     private String logoUrl;
 
+    @Nullable
     private String coverImageUrl;
 }

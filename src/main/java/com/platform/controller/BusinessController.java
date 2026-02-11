@@ -47,10 +47,8 @@ public class BusinessController {
 
     @PostMapping
     public ResponseEntity<BusinessResponseDTO> createBusiness(
-            @Valid @RequestBody BusinessRequestDTO request,
-            Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        BusinessResponseDTO business = businessService.createBusiness(request, currentUser);
+            @Valid @RequestBody BusinessRequestDTO request) {
+        BusinessResponseDTO business = businessService.createBusiness(request);
         return new ResponseEntity<>(business, HttpStatus.CREATED);
     }
 
