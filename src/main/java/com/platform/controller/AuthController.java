@@ -1,5 +1,6 @@
 package com.platform.controller;
 
+import com.platform.dto.auth.WhoAmIResponseDTO;
 import com.platform.dto.auth.LoginRequest;
 import com.platform.dto.auth.LoginResponse;
 import com.platform.dto.auth.RegisterRequest;

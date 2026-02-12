@@ -219,8 +219,7 @@ class BusinessServiceTest {
         BusinessResponseDTO dto =
                 businessService.updateBusiness(
                         business.getId(),
-                        createRequest(),
-                        owner
+                        createRequest()
                 );
 
         assertEquals("Test Business", dto.getName());
@@ -241,8 +240,7 @@ class BusinessServiceTest {
                 BusinessException.class,
                 () -> businessService.updateBusiness(
                         business.getId(),
-                        createRequest(),
-                        otherUser
+                        createRequest()
                 )
         );
     }

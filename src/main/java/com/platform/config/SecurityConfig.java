@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -37,11 +38,35 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/health/**").permitAll()
 
+//                        TODO: CHECK THE hasAuthority Think
+
+                        // Employee Logic - most specific first
+                        .requestMatchers(HttpMethod.POST, "/api/business/*/employee").hasRole(BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.PUT, "/api/business/*/employee/**").hasRole(BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/api/business/*/employee/**").hasRole(BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/api/business/*/employee/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/business/*/employee").authenticated()
+
+                        // Business Logic - general paths after
+                        .requestMatchers(HttpMethod.POST, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.PUT, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
                         .requestMatchers(HttpMethod.GET, "/api/business/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/business/admin/**").hasAuthority(PLATFORM_ADMIN)
+
+
+                        // Businesses Logic
+                        .requestMatchers(HttpMethod.GET, "/api/business/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.PUT, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+
+
+                        .requestMatchers("/api/business/admin/**").hasAuthority(PLATFORM_ADMIN)
+
+                        .requestMatchers("/api/users/whoami").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/business/*/service").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/business/*/employee/active").authenticated()
+
                         .requestMatchers(HttpMethod.POST, "/api/booking").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/booking/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/review/booking/**").authenticated()

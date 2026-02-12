@@ -54,6 +54,19 @@ public class Booking {
     @JoinColumn(name = "provided_service_id", nullable = false)
     private ProvidedService providedService;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_location_service_price_id", nullable = false)
+    private EmployeeLocationServicePrice priceEntry;
+
+
+    @ManyToOne
+    @JoinColumn(name = "location_id")
+    private Location location;
+
+    @Embedded
+    private Address clientAddress;
+
+
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private Review review;
 

@@ -43,10 +43,7 @@ public class Employee {
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookings;
 
-    @OneToMany(mappedBy = "employee")
-    private List<EmployeeService> employeeServices;
-
-    @PrePersist
+        @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();

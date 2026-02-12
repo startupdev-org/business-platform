@@ -55,10 +55,8 @@ public class BusinessController {
     @PutMapping("/{id}")
     public ResponseEntity<BusinessResponseDTO> updateBusiness(
             @PathVariable UUID id,
-            @Valid @RequestBody BusinessRequestDTO request,
-            Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        BusinessResponseDTO business = businessService.updateBusiness(id, request, currentUser);
+            @Valid @RequestBody BusinessRequestDTO request) {
+        BusinessResponseDTO business = businessService.updateBusiness(id, request);
         return ResponseEntity.ok(business);
     }
 

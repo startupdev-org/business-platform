@@ -51,9 +51,6 @@ public class ProvidedService {
     @OneToMany(mappedBy = "providedService", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookings;
 
-    @OneToMany(mappedBy = "service")
-    private List<EmployeeService> employeeServices;
-
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

@@ -33,11 +33,7 @@ public class BusinessService {
 
     @Transactional
     public BusinessResponseDTO createBusiness(BusinessRequestDTO dto) {
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = (String) auth.getPrincipal();
-
-        User owner = getUserByUsername(username);
+        User owner = getUser();
 
         String slug = SlugGenerator.generate(dto.getName());
 
@@ -90,9 +86,11 @@ public class BusinessService {
     }
 
     @Transactional
-    public BusinessResponseDTO updateBusiness(UUID id, BusinessRequestDTO dto, User currentUser) {
+    public BusinessResponseDTO updateBusiness(UUID id, BusinessRequestDTO dto) {
         Business business = businessRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
+
+        User currentUser = getUser();
 
         if (!business.getOwner().getId().equals(currentUser.getId()) &&
             !currentUser.getRole().equals(User.UserRole.PLATFORM_ADMIN)) {
@@ -150,6 +148,12 @@ public class BusinessService {
                 .createdAt(business.getCreatedAt())
                 .updatedAt(business.getUpdatedAt())
                 .build();
+    }
+
+    private User getUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = (String) auth.getPrincipal();
+        return getUserByUsername(username);
     }
 
     private User getUserByUsername(String username) {

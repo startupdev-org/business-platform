@@ -10,6 +10,11 @@ import com.platform.exception.ResourceNotFoundException;
 import com.platform.repository.BusinessRepository;
 import com.platform.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +28,14 @@ public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final BusinessRepository businessRepository;
+    private final UserService userService;
 
     @Transactional
-    public EmployeeResponseDTO createEmployee(UUID businessId, EmployeeRequestDTO dto, User currentUser) {
+    public EmployeeResponseDTO createEmployee(UUID businessId, EmployeeRequestDTO dto) {
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+
+        User currentUser = getUser();
 
         validateBusinessOwnership(business, currentUser);
 
@@ -48,18 +56,29 @@ public class EmployeeService {
         return toDTO(employee);
     }
 
-    public List<EmployeeResponseDTO> getBusinessEmployees(UUID businessId) {
-        return employeeRepository.findByBusinessId(businessId)
+    public Page<EmployeeResponseDTO> getBusinessEmployees(UUID businessId, Pageable pageable) {
+        List<Employee> employees;
+
+        employees = employeeRepository.findByBusinessId(businessId)
                 .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
+
+        return new PageImpl<>(
+                employees.stream().map(this::toDTO).toList(),
+                pageable,
+                employees.size());
     }
 
-    public List<EmployeeResponseDTO> getActiveEmployees(UUID businessId) {
-        return employeeRepository.findByBusinessIdAndActive(businessId, true)
+    public Page<EmployeeResponseDTO> getActiveEmployees(UUID businessId, Pageable pageable) {
+        List<Employee> employees = employeeRepository.findByBusinessIdAndActive(businessId, true)
                 .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
+
+        return new PageImpl<>(
+                employees.stream().map(this::toDTO).toList(),
+                pageable,
+                employees.size()
+        );
     }
 
     @Transactional
@@ -112,5 +131,15 @@ public class EmployeeService {
                 .createdAt(employee.getCreatedAt())
                 .updatedAt(employee.getUpdatedAt())
                 .build();
+    }
+
+    private User getUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = (String) auth.getPrincipal();
+        return getUserByUsername(username);
+    }
+
+    private User getUserByUsername(String username) {
+        return userService.getUserByUsername(username);
     }
 }

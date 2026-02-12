@@ -1,5 +1,6 @@
 package com.platform.controller;
 
+import com.platform.dto.auth.WhoAmIResponseDTO;
 import com.platform.dto.user.UserRequestDTO;
 import com.platform.dto.user.UserResponseDTO;
 import com.platform.service.UserService;
@@ -19,6 +20,11 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+
+    @GetMapping("/whoami")
+    public ResponseEntity<WhoAmIResponseDTO> whoami() {
+        return ResponseEntity.ok(userService.whoami());
+    }
 
     @GetMapping
     public ResponseEntity<Page<UserResponseDTO>> listUsers(

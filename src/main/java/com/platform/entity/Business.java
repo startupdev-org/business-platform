@@ -1,5 +1,6 @@
 package com.platform.entity;
 
+import com.platform.enums.ServiceDeliveryType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -61,6 +62,12 @@ public class Business {
 
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Employee> employees;
+
+    @OneToMany(mappedBy = "business")
+    private List<Location> locations;
+
+    @Enumerated(EnumType.STRING)
+    private ServiceDeliveryType serviceDeliveryType;
 
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProvidedService> providedServices;
