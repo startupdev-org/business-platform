@@ -1,8 +1,11 @@
 package com.platform.service;
 
+import com.platform.dto.business.BusinessMapper;
 import com.platform.dto.business.BusinessRequestDTO;
 import com.platform.dto.business.BusinessResponseDTO;
+import com.platform.dto.service.ServiceResponseDTO;
 import com.platform.entity.Business;
+import com.platform.entity.BusinessWorkingHours;
 import com.platform.entity.User;
 import com.platform.exception.BusinessException;
 import com.platform.exception.ResourceNotFoundException;
@@ -28,6 +31,7 @@ public class BusinessService {
     private final BusinessRepository businessRepository;
     private final ReviewRepository reviewRepository;
     private final UserService userService;
+    private final ServiceService servicesService;
 
     private static final String BUSINESS_EXCEPTION = "Business not found";
 
@@ -131,23 +135,11 @@ public class BusinessService {
     }
 
     private BusinessResponseDTO toDTO(Business business) {
-        Double averageRating = reviewRepository.getAverageRatingByBusiness(business.getId());
+        Double avgRating = reviewRepository.getAverageRatingByBusiness(business.getId());
 
-        return BusinessResponseDTO.builder()
-                .id(business.getId())
-                .name(business.getName())
-                .slug(business.getSlug())
-                .description(business.getDescription())
-                .address(business.getAddress())
-                .city(business.getCity())
-                .phone(business.getPhone())
-                .website(business.getWebsite())
-                .logoUrl(business.getLogoUrl())
-                .coverImageUrl(business.getCoverImageUrl())
-                .ratingOverall(averageRating != null ? averageRating : 0.0)
-                .createdAt(business.getCreatedAt())
-                .updatedAt(business.getUpdatedAt())
-                .build();
+        List<ServiceResponseDTO> businessServices = servicesService.getBusinessServices(business.getId());
+
+        return BusinessMapper.toDTO(business, avgRating, businessServices);
     }
 
     private User getUser() {

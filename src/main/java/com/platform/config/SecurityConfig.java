@@ -34,45 +34,53 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(mag -> mag.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
 
-                        .requestMatchers("/api/health/**").permitAll()
+                                .requestMatchers("/api/health/**").permitAll()
 
 //                        TODO: CHECK THE hasAuthority Think
 
-                        // Employee Logic - most specific first
-                        .requestMatchers(HttpMethod.POST, "/api/business/*/employee").hasRole(BUSINESS_ADMIN)
-                        .requestMatchers(HttpMethod.PUT, "/api/business/*/employee/**").hasRole(BUSINESS_ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, "/api/business/*/employee/**").hasRole(BUSINESS_ADMIN)
-                        .requestMatchers(HttpMethod.GET, "/api/business/*/employee/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/business/*/employee").authenticated()
+                                // Employee Logic - most specific first
+                                .requestMatchers(HttpMethod.POST, "/api/business/*/employee").hasRole(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.PUT, "/api/business/*/employee/**").hasRole(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.DELETE, "/api/business/*/employee/**").hasRole(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.GET, "/api/business/*/employee/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/business/*/employee").authenticated()
 
-                        // Business Logic - general paths after
-                        .requestMatchers(HttpMethod.POST, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                        .requestMatchers(HttpMethod.PUT, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                        .requestMatchers(HttpMethod.GET, "/api/business/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/business/*/working-hours").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/api/business/*/working-hours").hasRole(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.POST, "/api/business/*/working-hours").hasRole(BUSINESS_ADMIN)
+
+                                .requestMatchers(HttpMethod.GET, "/api/business/*/features").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/api/business/*/features").hasRole(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.POST, "/api/business/*/features").hasRole(BUSINESS_ADMIN)
+
+                                // Business Logic - general paths after
+                                .requestMatchers(HttpMethod.POST, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.PUT, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.DELETE, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.GET, "/api/business/**").authenticated()
 
 
-                        // Businesses Logic
-                        .requestMatchers(HttpMethod.GET, "/api/business/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                        .requestMatchers(HttpMethod.PUT, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                                // Businesses Logic
+                                .requestMatchers(HttpMethod.GET, "/api/business/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.PUT, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.DELETE, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
 
 
-                        .requestMatchers("/api/business/admin/**").hasAuthority(PLATFORM_ADMIN)
+                                .requestMatchers("/api/business/admin/**").hasAuthority(PLATFORM_ADMIN)
 
-                        .requestMatchers("/api/users/whoami").authenticated()
+                                .requestMatchers("/api/users/whoami").authenticated()
 
-                        .requestMatchers(HttpMethod.GET, "/api/business/*/service").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/business/*/service").authenticated()
 
-                        .requestMatchers(HttpMethod.POST, "/api/booking").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/booking/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/review/booking/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/review/business/**").authenticated()
-                        .requestMatchers("/swagger-ui/**","/swagger-ui/index.html", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/booking").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/booking/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/review/booking/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/review/business/**").authenticated()
+                                .requestMatchers("/swagger-ui/**","/swagger-ui/index.html", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                                .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

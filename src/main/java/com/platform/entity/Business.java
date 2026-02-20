@@ -8,8 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "businesses")
@@ -66,11 +65,22 @@ public class Business {
     @OneToMany(mappedBy = "business")
     private List<Location> locations;
 
+    @OneToMany(
+            mappedBy = "business",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<BusinessWorkingHours> workingHours = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     private ServiceDeliveryType serviceDeliveryType;
 
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProvidedService> providedServices;
+
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<BusinessFeature> features = new HashSet<>();
+
 
     @PrePersist
     protected void onCreate() {
@@ -82,5 +92,9 @@ public class Business {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isNotOwner(User userToCheck) {
+        return !owner.getId().equals(userToCheck.getId());
     }
 }
