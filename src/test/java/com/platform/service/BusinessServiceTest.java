@@ -117,7 +117,7 @@ class BusinessServiceTest {
     // ----------------------------
 
     @Test
-    void getBusinessById_success() {
+    void getBusinessDTOById_success() {
 
         User owner = createBusinessAdmin();
         Business business = createBusiness(owner);
@@ -129,13 +129,13 @@ class BusinessServiceTest {
                 .thenReturn(4.0);
 
         BusinessResponseDTO dto =
-                businessService.getBusinessById(business.getId());
+                businessService.getBusinessDTOById(business.getId());
 
         assertEquals(business.getId(), dto.getId());
     }
 
     @Test
-    void getBusinessById_notFound() {
+    void getBusinessDTOById_notFound() {
 
         UUID id = UUID.randomUUID();
 
@@ -144,7 +144,7 @@ class BusinessServiceTest {
 
         assertThrows(
                 ResourceNotFoundException.class,
-                () -> businessService.getBusinessById(id)
+                () -> businessService.getBusinessDTOById(id)
         );
     }
 

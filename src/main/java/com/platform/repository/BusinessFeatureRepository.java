@@ -7,4 +7,6 @@ import java.util.*;
 
 public interface BusinessFeatureRepository extends JpaRepository<BusinessFeature, Long> {
     List<BusinessFeature> findByBusinessId(UUID businessId);
+
+    boolean existsByBusinessIdAndName(UUID businessId, String name);
 }

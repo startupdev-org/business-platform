@@ -52,7 +52,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/business/*/working-hours").hasRole(BUSINESS_ADMIN)
 
                                 .requestMatchers(HttpMethod.GET, "/api/business/*/features").authenticated()
-                                .requestMatchers(HttpMethod.DELETE, "/api/business/*/features").hasRole(BUSINESS_ADMIN)
+                                .requestMatchers(HttpMethod.DELETE, "/api/business/*/features/**").hasRole(BUSINESS_ADMIN)
                                 .requestMatchers(HttpMethod.POST, "/api/business/*/features").hasRole(BUSINESS_ADMIN)
 
                                 // Business Logic - general paths after

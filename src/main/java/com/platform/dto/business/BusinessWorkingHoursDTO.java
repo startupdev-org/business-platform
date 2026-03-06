@@ -1,5 +1,6 @@
 package com.platform.dto.business;
 
+import com.platform.entity.BusinessWorkingHours;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

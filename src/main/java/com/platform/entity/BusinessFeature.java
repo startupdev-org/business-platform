@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "business_features")
+@Table(
+        name = "business_features",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"business_id", "name"})
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,13 +16,12 @@ public class BusinessFeature {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long featureId;
 
-    // The business that owns this feature
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id", nullable = false)
     private Business business;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 }

@@ -5,7 +5,6 @@ import com.platform.dto.business.BusinessRequestDTO;
 import com.platform.dto.business.BusinessResponseDTO;
 import com.platform.dto.service.ServiceResponseDTO;
 import com.platform.entity.Business;
-import com.platform.entity.BusinessWorkingHours;
 import com.platform.entity.User;
 import com.platform.exception.BusinessException;
 import com.platform.exception.ResourceNotFoundException;
@@ -61,11 +60,19 @@ public class BusinessService {
         return toDTO(business);
     }
 
-    public BusinessResponseDTO getBusinessById(UUID id) {
+    public BusinessResponseDTO getBusinessDTOById(UUID id) {
         Business business = businessRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
         return toDTO(business);
     }
+
+    public Business getBusinessById(UUID id) {
+        Business business = businessRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
+        return business;
+    }
+
+
 
     public BusinessResponseDTO getBusinessBySlug(String slug) {
         Business business = businessRepository.findBySlug(slug)
@@ -138,6 +145,8 @@ public class BusinessService {
         Double avgRating = reviewRepository.getAverageRatingByBusiness(business.getId());
 
         List<ServiceResponseDTO> businessServices = servicesService.getBusinessServices(business.getId());
+
+
 
         return BusinessMapper.toDTO(business, avgRating, businessServices);
     }

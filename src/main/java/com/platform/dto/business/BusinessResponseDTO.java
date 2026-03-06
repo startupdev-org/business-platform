@@ -1,6 +1,7 @@
 package com.platform.dto.business;
 
 import com.platform.dto.service.ServiceResponseDTO;
+import com.platform.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,7 @@ public class BusinessResponseDTO {
     private String website;
     private String logoUrl;
     private String coverImageUrl;
+    private User owner;
     private Double ratingOverall;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -32,4 +34,9 @@ public class BusinessResponseDTO {
     private List<ServiceResponseDTO> providedServices;
     private List<BusinessWorkingHoursDTO> businessWorkingHours;
     private Set<BusinessFeatureDTO> businessFeatures;
+
+
+    public boolean isNotOwner(User userToCheck) {
+        return !owner.getId().equals(userToCheck.getId());
+    }
 }

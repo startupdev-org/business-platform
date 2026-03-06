@@ -41,7 +41,7 @@ public class BusinessController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BusinessResponseDTO> getById(@PathVariable UUID id) {
-        BusinessResponseDTO business = businessService.getBusinessById(id);
+        BusinessResponseDTO business = businessService.getBusinessDTOById(id);
         return ResponseEntity.ok(business);
     }
 
