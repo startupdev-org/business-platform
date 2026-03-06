@@ -6,6 +6,10 @@ import com.platform.entity.User;
 import com.platform.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,14 +25,13 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-    @PostMapping
-    public ResponseEntity<EmployeeResponseDTO> createEmployee(
+    @GetMapping
+    public ResponseEntity<Page<EmployeeResponseDTO>> listEmployees(
             @PathVariable UUID businessId,
-            @Valid @RequestBody EmployeeRequestDTO request,
-            Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        EmployeeResponseDTO employee = employeeService.createEmployee(businessId, request, currentUser);
-        return new ResponseEntity<>(employee, HttpStatus.CREATED);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(employeeService.getBusinessEmployees(businessId, PageRequest.of(page, size)));
     }
 
     @GetMapping("/{employeeId}")
@@ -37,16 +40,21 @@ public class EmployeeController {
         return ResponseEntity.ok(employee);
     }
 
-    @GetMapping
-    public ResponseEntity<List<EmployeeResponseDTO>> listEmployees(@PathVariable UUID businessId) {
-        List<EmployeeResponseDTO> employees = employeeService.getBusinessEmployees(businessId);
-        return ResponseEntity.ok(employees);
+    @GetMapping("/active")
+    public ResponseEntity<Page<EmployeeResponseDTO>> listActiveEmployees(
+            @PathVariable UUID businessId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(employeeService.getActiveEmployees(businessId, PageRequest.of(page, size)));
     }
 
-    @GetMapping("/active")
-    public ResponseEntity<List<EmployeeResponseDTO>> listActiveEmployees(@PathVariable UUID businessId) {
-        List<EmployeeResponseDTO> employees = employeeService.getActiveEmployees(businessId);
-        return ResponseEntity.ok(employees);
+    @PostMapping
+    public ResponseEntity<EmployeeResponseDTO> createEmployee(
+            @PathVariable("businessId") UUID businessId,
+            @Valid @RequestBody EmployeeRequestDTO request) {
+        EmployeeResponseDTO employee = employeeService.createEmployee(businessId, request);
+        return new ResponseEntity<>(employee, HttpStatus.CREATED);
     }
 
     @PutMapping("/{employeeId}")

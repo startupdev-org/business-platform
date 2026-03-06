@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.*;
 
 import com.platform.dto.business.BusinessRequestDTO;
 import com.platform.dto.business.BusinessResponseDTO;
@@ -87,9 +86,6 @@ class BusinessServiceTest {
         User owner = createBusinessAdmin();
         BusinessRequestDTO dto = createRequest();
 
-        when(businessRepository.findBySlug(any()))
-                .thenReturn(Optional.empty());
-
         when(businessRepository.save(any()))
                 .thenAnswer(i -> i.getArgument(0));
 
@@ -97,7 +93,7 @@ class BusinessServiceTest {
                 .thenReturn(5.0);
 
         BusinessResponseDTO response =
-                businessService.createBusiness(dto, owner);
+                businessService.createBusiness(dto);
 
         assertNotNull(response);
         assertEquals(dto.getName(), response.getName());
@@ -105,12 +101,23 @@ class BusinessServiceTest {
         verify(businessRepository).save(any());
     }
 
+    @Test
+    void createBusiness_error() {
+
+        User platformAdmin = createPlatformAdmin();
+        BusinessRequestDTO dto = createRequest();
+
+        assertThrows(BusinessException.class, () -> businessService.createBusiness(dto));
+
+        verify(businessRepository, never()).save(any());
+    }
+
     // ----------------------------
     // getBusinessById
     // ----------------------------
 
     @Test
-    void getBusinessById_success() {
+    void getBusinessDTOById_success() {
 
         User owner = createBusinessAdmin();
         Business business = createBusiness(owner);
@@ -122,13 +129,13 @@ class BusinessServiceTest {
                 .thenReturn(4.0);
 
         BusinessResponseDTO dto =
-                businessService.getBusinessById(business.getId());
+                businessService.getBusinessDTOById(business.getId());
 
         assertEquals(business.getId(), dto.getId());
     }
 
     @Test
-    void getBusinessById_notFound() {
+    void getBusinessDTOById_notFound() {
 
         UUID id = UUID.randomUUID();
 
@@ -137,7 +144,7 @@ class BusinessServiceTest {
 
         assertThrows(
                 ResourceNotFoundException.class,
-                () -> businessService.getBusinessById(id)
+                () -> businessService.getBusinessDTOById(id)
         );
     }
 
@@ -212,8 +219,7 @@ class BusinessServiceTest {
         BusinessResponseDTO dto =
                 businessService.updateBusiness(
                         business.getId(),
-                        createRequest(),
-                        owner
+                        createRequest()
                 );
 
         assertEquals("Test Business", dto.getName());
@@ -234,8 +240,7 @@ class BusinessServiceTest {
                 BusinessException.class,
                 () -> businessService.updateBusiness(
                         business.getId(),
-                        createRequest(),
-                        otherUser
+                        createRequest()
                 )
         );
     }

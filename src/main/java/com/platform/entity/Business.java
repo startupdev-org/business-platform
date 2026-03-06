@@ -1,5 +1,6 @@
 package com.platform.entity;
 
+import com.platform.enums.ServiceDeliveryType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,8 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "businesses")
@@ -62,8 +62,25 @@ public class Business {
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Employee> employees;
 
+    @OneToMany(mappedBy = "business")
+    private List<Location> locations;
+
+    @OneToMany(
+            mappedBy = "business",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<BusinessWorkingHours> workingHours = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    private ServiceDeliveryType serviceDeliveryType;
+
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProvidedService> providedServices;
+
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<BusinessFeature> features = new HashSet<>();
+
 
     @PrePersist
     protected void onCreate() {
@@ -75,5 +92,19 @@ public class Business {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isNotOwner(User userToCheck) {
+        return !owner.getId().equals(userToCheck.getId());
+    }
+
+    public static boolean hasFeatureById(Business business, Long functionId) {
+        if (business == null || business.getFeatures() == null) {
+            return false;
+        }
+
+        return business.getFeatures()
+                .stream()
+                .anyMatch(feature -> feature.getFeatureId().equals(functionId));
     }
 }

@@ -1,7 +1,9 @@
 package com.platform.service;
 
+import com.platform.dto.business.BusinessMapper;
 import com.platform.dto.business.BusinessRequestDTO;
 import com.platform.dto.business.BusinessResponseDTO;
+import com.platform.dto.service.ServiceResponseDTO;
 import com.platform.entity.Business;
 import com.platform.entity.User;
 import com.platform.exception.BusinessException;
@@ -13,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,15 +29,16 @@ public class BusinessService {
 
     private final BusinessRepository businessRepository;
     private final ReviewRepository reviewRepository;
+    private final UserService userService;
+    private final ServiceService servicesService;
 
     private static final String BUSINESS_EXCEPTION = "Business not found";
 
     @Transactional
-    public BusinessResponseDTO createBusiness(BusinessRequestDTO dto, User owner) {
+    public BusinessResponseDTO createBusiness(BusinessRequestDTO dto) {
+        User owner = getUser();
+
         String slug = SlugGenerator.generate(dto.getName());
-        if (businessRepository.findBySlug(slug).isPresent()) {
-            slug = slug + "-" + UUID.randomUUID().toString().substring(0, 8);
-        }
 
         if (!owner.getRole().equals(User.UserRole.BUSINESS_ADMIN))
             throw new BusinessException("Just business admin can create new businesses");
@@ -55,11 +60,19 @@ public class BusinessService {
         return toDTO(business);
     }
 
-    public BusinessResponseDTO getBusinessById(UUID id) {
+    public BusinessResponseDTO getBusinessDTOById(UUID id) {
         Business business = businessRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
         return toDTO(business);
     }
+
+    public Business getBusinessById(UUID id) {
+        Business business = businessRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
+        return business;
+    }
+
+
 
     public BusinessResponseDTO getBusinessBySlug(String slug) {
         Business business = businessRepository.findBySlug(slug)
@@ -84,9 +97,11 @@ public class BusinessService {
     }
 
     @Transactional
-    public BusinessResponseDTO updateBusiness(UUID id, BusinessRequestDTO dto, User currentUser) {
+    public BusinessResponseDTO updateBusiness(UUID id, BusinessRequestDTO dto) {
         Business business = businessRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
+
+        User currentUser = getUser();
 
         if (!business.getOwner().getId().equals(currentUser.getId()) &&
             !currentUser.getRole().equals(User.UserRole.PLATFORM_ADMIN)) {
@@ -127,22 +142,22 @@ public class BusinessService {
     }
 
     private BusinessResponseDTO toDTO(Business business) {
-        Double averageRating = reviewRepository.getAverageRatingByBusiness(business.getId());
+        Double avgRating = reviewRepository.getAverageRatingByBusiness(business.getId());
 
-        return BusinessResponseDTO.builder()
-                .id(business.getId())
-                .name(business.getName())
-                .slug(business.getSlug())
-                .description(business.getDescription())
-                .address(business.getAddress())
-                .city(business.getCity())
-                .phone(business.getPhone())
-                .website(business.getWebsite())
-                .logoUrl(business.getLogoUrl())
-                .coverImageUrl(business.getCoverImageUrl())
-                .ratingOverall(averageRating != null ? averageRating : 0.0)
-                .createdAt(business.getCreatedAt())
-                .updatedAt(business.getUpdatedAt())
-                .build();
+        List<ServiceResponseDTO> businessServices = servicesService.getBusinessServices(business.getId());
+
+
+
+        return BusinessMapper.toDTO(business, avgRating, businessServices);
+    }
+
+    private User getUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = (String) auth.getPrincipal();
+        return getUserByUsername(username);
+    }
+
+    private User getUserByUsername(String username) {
+        return userService.getUserByUsername(username);
     }
 }

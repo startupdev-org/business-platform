@@ -41,26 +41,22 @@ public class BusinessController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BusinessResponseDTO> getById(@PathVariable UUID id) {
-        BusinessResponseDTO business = businessService.getBusinessById(id);
+        BusinessResponseDTO business = businessService.getBusinessDTOById(id);
         return ResponseEntity.ok(business);
     }
 
     @PostMapping
     public ResponseEntity<BusinessResponseDTO> createBusiness(
-            @Valid @RequestBody BusinessRequestDTO request,
-            Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        BusinessResponseDTO business = businessService.createBusiness(request, currentUser);
+            @Valid @RequestBody BusinessRequestDTO request) {
+        BusinessResponseDTO business = businessService.createBusiness(request);
         return new ResponseEntity<>(business, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<BusinessResponseDTO> updateBusiness(
             @PathVariable UUID id,
-            @Valid @RequestBody BusinessRequestDTO request,
-            Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        BusinessResponseDTO business = businessService.updateBusiness(id, request, currentUser);
+            @Valid @RequestBody BusinessRequestDTO request) {
+        BusinessResponseDTO business = businessService.updateBusiness(id, request);
         return ResponseEntity.ok(business);
     }
 

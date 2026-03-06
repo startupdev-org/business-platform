@@ -3,6 +3,7 @@ package com.platform.service;
 import com.platform.dto.auth.LoginRequest;
 import com.platform.dto.auth.LoginResponse;
 import com.platform.dto.auth.RegisterRequest;
+import com.platform.dto.auth.WhoAmIResponseDTO;
 import com.platform.entity.User;
 import com.platform.exception.BusinessException;
 import com.platform.repository.UserRepository;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
