@@ -24,10 +24,8 @@ public class ServiceController {
     @PostMapping
     public ResponseEntity<ServiceResponseDTO> createService(
             @PathVariable UUID businessId,
-            @Valid @RequestBody ServiceRequestDTO request,
-            Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        ServiceResponseDTO service = serviceService.createService(businessId, request, currentUser);
+            @Valid @RequestBody ServiceRequestDTO request) {
+        ServiceResponseDTO service = serviceService.createService(businessId, request);
         return new ResponseEntity<>(service, HttpStatus.CREATED);
     }
 
@@ -53,10 +51,8 @@ public class ServiceController {
     public ResponseEntity<ServiceResponseDTO> updateService(
             @PathVariable UUID businessId,
             @PathVariable UUID serviceId,
-            @Valid @RequestBody ServiceRequestDTO request,
-            Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        ServiceResponseDTO service = serviceService.updateService(businessId, serviceId, request, currentUser);
+            @Valid @RequestBody ServiceRequestDTO request) {
+        ServiceResponseDTO service = serviceService.updateService(businessId, serviceId, request);
         return ResponseEntity.ok(service);
     }
 

@@ -29,6 +29,7 @@ public class FeatureService {
         return featureRepository.findByBusinessId(business.getId())
                 .stream()
                 .map(f -> BusinessFeatureDTO.builder()
+                        .featureId(f.getFeatureId())
                         .businessId(f.getBusiness().getId())
                         .name(f.getName())
                         .build())

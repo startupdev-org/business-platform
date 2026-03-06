@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,71 +17,84 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity   // Enables @PreAuthorize / @PostAuthorize on controllers
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private static final String PLATFORM_ADMIN = "PLATFORM_ADMIN";
-    private static final String BUSINESS_ADMIN = "BUSINESS_ADMIN";
+
+    // ── Role constants ────────────────────────────────────────────────────────
+    private static final String ROLE_PLATFORM_ADMIN = "PLATFORM_ADMIN";
+    private static final String ROLE_BUSINESS_ADMIN = "BUSINESS_ADMIN";
+
+    // ── Public endpoints ──────────────────────────────────────────────────────
+    private static final String[] PUBLIC_POST_PATTERNS   = { "/api/auth/**" };
+    private static final String[] PUBLIC_GET_PATTERNS    = {
+            "/api/health/**",
+            "/swagger-ui/**",
+            "/swagger-ui/index.html",
+            "/v3/api-docs/**",
+            "/swagger-ui.html"
+    };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(mag -> mag.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(AbstractHttpConfigurer::disable)          // Safe: stateless JWT, no session
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
 
-                                .requestMatchers("/api/health/**").permitAll()
+                        // ── 1. Fully public ───────────────────────────────────────────
+                        .requestMatchers(HttpMethod.POST, PUBLIC_POST_PATTERNS).permitAll()
+                        .requestMatchers(PUBLIC_GET_PATTERNS).permitAll()
 
-//                        TODO: CHECK THE hasAuthority Think
+                        // ── 2. Platform admin (most privileged — checked early) ────────
+                        .requestMatchers("/api/business/admin/**").hasRole(ROLE_PLATFORM_ADMIN)
 
-                                // Employee Logic - most specific first
-                                .requestMatchers(HttpMethod.POST, "/api/business/*/employee").hasRole(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.PUT, "/api/business/*/employee/**").hasRole(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.DELETE, "/api/business/*/employee/**").hasRole(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.GET, "/api/business/*/employee/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/api/business/*/employee").authenticated()
+                        // ── 3. Employee endpoints ─────────────────────────────────────
+                        // Write operations → BUSINESS_ADMIN only
+                        .requestMatchers(HttpMethod.POST,   "/api/business/*/employee")      .hasRole(ROLE_BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.PUT,    "/api/business/*/employee/**")   .hasRole(ROLE_BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/api/business/*/employee/**")   .hasRole(ROLE_BUSINESS_ADMIN)
+                        // Read operations → any authenticated user
+                        .requestMatchers(HttpMethod.GET,    "/api/business/*/employee/**")   .authenticated()
+                        .requestMatchers(HttpMethod.GET,    "/api/business/*/employee")      .authenticated()
 
-                                .requestMatchers(HttpMethod.GET, "/api/business/*/working-hours").authenticated()
-                                .requestMatchers(HttpMethod.DELETE, "/api/business/*/working-hours").hasRole(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.POST, "/api/business/*/working-hours").hasRole(BUSINESS_ADMIN)
+                        // ── 4. Working-hours endpoints ────────────────────────────────
+                        .requestMatchers(HttpMethod.GET,    "/api/business/*/working-hours") .authenticated()
+                        .requestMatchers(HttpMethod.POST,   "/api/business/*/working-hours") .hasRole(ROLE_BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/api/business/*/working-hours") .hasRole(ROLE_BUSINESS_ADMIN)
 
-                                .requestMatchers(HttpMethod.GET, "/api/business/*/features").authenticated()
-                                .requestMatchers(HttpMethod.DELETE, "/api/business/*/features/**").hasRole(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.POST, "/api/business/*/features").hasRole(BUSINESS_ADMIN)
+                        // ── 5. Features endpoints ─────────────────────────────────────
+                        .requestMatchers(HttpMethod.GET,    "/api/business/*/features")      .authenticated()
+                        .requestMatchers(HttpMethod.POST,   "/api/business/*/features")      .hasRole(ROLE_BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/api/business/*/features/**")   .hasRole(ROLE_BUSINESS_ADMIN)
 
-                                // Business Logic - general paths after
-                                .requestMatchers(HttpMethod.POST, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.PUT, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.DELETE, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.GET, "/api/business/**").authenticated()
+                        // ── 6. Service endpoints ──────────────────────────────────────
+                        .requestMatchers(HttpMethod.GET,    "/api/business/*/service")       .authenticated()
 
+                        // ── 7. General business CRUD (catch-all for /api/business/**) ─
+                        .requestMatchers(HttpMethod.GET,    "/api/business/**")              .authenticated()
+                        .requestMatchers(HttpMethod.POST,   "/api/business/**")              .hasRole(ROLE_BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.PUT,    "/api/business/**")              .hasRole(ROLE_BUSINESS_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/api/business/**")              .hasRole(ROLE_BUSINESS_ADMIN)
 
-                                // Businesses Logic
-                                .requestMatchers(HttpMethod.GET, "/api/business/**").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.PUT, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
-                                .requestMatchers(HttpMethod.DELETE, "/api/business/**").hasAnyAuthority(BUSINESS_ADMIN)
+                        // ── 8. User endpoints ─────────────────────────────────────────
+                        .requestMatchers("/api/users/whoami")                                .authenticated()
 
+                        // ── 9. Booking & Review endpoints ─────────────────────────────
+                        .requestMatchers(HttpMethod.POST,   "/api/booking")                  .authenticated()
+                        .requestMatchers(HttpMethod.GET,    "/api/booking/**")               .authenticated()
+                        .requestMatchers(HttpMethod.POST,   "/api/review/booking/**")        .authenticated()
+                        .requestMatchers(HttpMethod.GET,    "/api/review/business/**")       .authenticated()
 
-                                .requestMatchers("/api/business/admin/**").hasAuthority(PLATFORM_ADMIN)
-
-                                .requestMatchers("/api/users/whoami").authenticated()
-
-                                .requestMatchers(HttpMethod.GET, "/api/business/*/service").authenticated()
-
-                                .requestMatchers(HttpMethod.POST, "/api/booking").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/api/booking/**").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/review/booking/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/api/review/business/**").authenticated()
-                                .requestMatchers("/swagger-ui/**","/swagger-ui/index.html", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                                .anyRequest().authenticated()
+                        // ── 10. Deny everything else ──────────────────────────────────
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -88,14 +102,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
-
-
 }

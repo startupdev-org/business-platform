@@ -67,9 +67,8 @@ public class BusinessService {
     }
 
     public Business getBusinessById(UUID id) {
-        Business business = businessRepository.findById(id)
+        return businessRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
-        return business;
     }
 
 

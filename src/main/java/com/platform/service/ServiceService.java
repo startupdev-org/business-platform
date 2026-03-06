@@ -7,29 +7,37 @@ import com.platform.entity.ProvidedService;
 import com.platform.entity.User;
 import com.platform.exception.BusinessException;
 import com.platform.exception.ResourceNotFoundException;
+import com.platform.exception.ServiceNotFoundException;
 import com.platform.repository.BusinessRepository;
 import com.platform.repository.ServiceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ServiceService {
 
     private final ServiceRepository serviceRepository;
+    private final UserService userService;
+
     private final BusinessRepository businessRepository;
 
     @Transactional
-    public ServiceResponseDTO createService(UUID businessId, ServiceRequestDTO dto, User currentUser) {
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+    public ServiceResponseDTO createService(UUID businessId, ServiceRequestDTO dto) {
 
-        validateBusinessOwnership(business, currentUser);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        Business business = getBusinessById(businessId);
+
+        User user = userService.getUserByUsername(authentication.getName());
+
+        validateBusinessOwnership(business, user);
 
         ProvidedService providedService = ProvidedService.builder()
                 .name(dto.getName())
@@ -46,7 +54,7 @@ public class ServiceService {
 
     public ServiceResponseDTO getService(UUID id) {
         ProvidedService providedService = serviceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
+                .orElseThrow(() -> new ServiceNotFoundException("Service not found"));
         return toDTO(providedService);
     }
 
@@ -54,22 +62,27 @@ public class ServiceService {
         return serviceRepository.findByBusinessId(businessId)
                 .stream()
                 .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<ServiceResponseDTO> getActiveServices(UUID businessId) {
         return serviceRepository.findByBusinessIdAndActive(businessId, true)
                 .stream()
                 .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional
-    public ServiceResponseDTO updateService(UUID businessId, UUID serviceId, ServiceRequestDTO dto, User currentUser) {
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+    public ServiceResponseDTO updateService(UUID businessId, UUID serviceId, ServiceRequestDTO dto) {
 
-        validateBusinessOwnership(business, currentUser);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        Business business = getBusinessById(businessId);
+
+        User user = userService.getUserByUsername(authentication.getName());
+
+        validateBusinessOwnership(business, user);
+
 
         ProvidedService providedService = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
@@ -88,8 +101,8 @@ public class ServiceService {
 
     @Transactional
     public void deleteService(UUID businessId, UUID serviceId, User currentUser) {
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+
+        Business business = getBusinessById(businessId);
 
         validateBusinessOwnership(business, currentUser);
 
@@ -104,6 +117,11 @@ public class ServiceService {
             !currentUser.getRole().equals(User.UserRole.PLATFORM_ADMIN)) {
             throw new BusinessException("Unauthorized");
         }
+    }
+
+    private Business getBusinessById(UUID businessId) {
+        return businessRepository.findById(businessId)
+                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
     }
 
     private ServiceResponseDTO toDTO(ProvidedService providedService) {
