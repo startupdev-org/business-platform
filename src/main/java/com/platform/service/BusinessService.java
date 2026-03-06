@@ -71,8 +71,6 @@ public class BusinessService {
                 .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
     }
 
-
-
     public BusinessResponseDTO getBusinessBySlug(String slug) {
         Business business = businessRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
