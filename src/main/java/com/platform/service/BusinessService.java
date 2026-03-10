@@ -3,6 +3,7 @@ package com.platform.service;
 import com.platform.dto.business.BusinessMapper;
 import com.platform.dto.business.BusinessRequestDTO;
 import com.platform.dto.business.BusinessResponseDTO;
+import com.platform.dto.employee.EmployeeResponseDTO;
 import com.platform.dto.service.ServiceResponseDTO;
 import com.platform.entity.Business;
 import com.platform.entity.User;
@@ -31,6 +32,7 @@ public class BusinessService {
     private final ReviewRepository reviewRepository;
     private final UserService userService;
     private final ServiceService servicesService;
+    private final EmployeeService employeeService;
 
     private static final String BUSINESS_EXCEPTION = "Business not found";
 
@@ -143,9 +145,11 @@ public class BusinessService {
 
         List<ServiceResponseDTO> businessServices = servicesService.getBusinessServices(business.getId());
 
+        User owner = userService.getUserById(business.getOwner().getId());
 
+        List<EmployeeResponseDTO> employeeList = employeeService.getBusinessEmployeesList(business.getId());
 
-        return BusinessMapper.toDTO(business, avgRating, businessServices);
+        return BusinessMapper.toDTO(business, avgRating, businessServices, employeeList, owner);
     }
 
     private User getUser() {

@@ -56,6 +56,16 @@ public class EmployeeService {
         return toDTO(employee);
     }
 
+    public List<EmployeeResponseDTO> getBusinessEmployeesList(UUID businessId) {
+        List<Employee> employees;
+
+        employees = employeeRepository.findByBusinessId(businessId)
+                .stream()
+                .toList();
+
+        return employees.stream().map(this::toDTO).toList();
+    }
+
     public Page<EmployeeResponseDTO> getBusinessEmployees(UUID businessId, Pageable pageable) {
         List<Employee> employees;
 

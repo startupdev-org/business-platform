@@ -34,6 +34,13 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.getBusinessEmployees(businessId, PageRequest.of(page, size)));
     }
 
+    @GetMapping("/list")
+    public ResponseEntity<List<EmployeeResponseDTO>> listEmployees(
+            @PathVariable UUID businessId
+    ) {
+        return ResponseEntity.ok(employeeService.getBusinessEmployeesList(businessId));
+    }
+
     @GetMapping("/{employeeId}")
     public ResponseEntity<EmployeeResponseDTO> getEmployee(@PathVariable UUID employeeId) {
         EmployeeResponseDTO employee = employeeService.getEmployee(employeeId);

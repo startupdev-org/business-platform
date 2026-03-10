@@ -23,6 +23,8 @@ public class BusinessController {
 
     private final BusinessService businessService;
 
+    // TODO: should add the query when searching for businesses
+
     @GetMapping
     public ResponseEntity<Page<BusinessResponseDTO>> listBusinesses(
             @RequestParam(required = false) String city,
@@ -35,8 +37,7 @@ public class BusinessController {
 
     @GetMapping("/slug/{slug}")
     public ResponseEntity<BusinessResponseDTO> getBySlug(@PathVariable String slug) {
-        BusinessResponseDTO business = businessService.getBusinessBySlug(slug);
-        return ResponseEntity.ok(business);
+        return ResponseEntity.ok(businessService.getBusinessBySlug(slug));
     }
 
     @GetMapping("/{id}")

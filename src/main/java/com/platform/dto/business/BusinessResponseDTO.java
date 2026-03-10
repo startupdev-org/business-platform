@@ -1,6 +1,9 @@
 package com.platform.dto.business;
 
+import com.platform.dto.employee.EmployeeResponseDTO;
 import com.platform.dto.service.ServiceResponseDTO;
+import com.platform.dto.user.UserResponseDTO;
+import com.platform.entity.Employee;
 import com.platform.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,12 +29,13 @@ public class BusinessResponseDTO {
     private String website;
     private String logoUrl;
     private String coverImageUrl;
-    private User owner;
+    private UserResponseDTO owner;
     private Double ratingOverall;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     private List<ServiceResponseDTO> providedServices;
+    private List<EmployeeResponseDTO> employeeList;
     private List<BusinessWorkingHoursDTO> businessWorkingHours;
     private Set<BusinessFeatureDTO> businessFeatures;
 

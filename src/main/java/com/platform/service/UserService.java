@@ -40,7 +40,11 @@ public class UserService {
                 .map(this::toResponseDTO);
     }
 
-    public UserResponseDTO getUserById(UUID id) {
+    public User getUserById(UUID id) {
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    }
+
+    public UserResponseDTO getUserDTOById(UUID id) {
         return userRepository.findById(id)
                 .map(this::toResponseDTO)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));

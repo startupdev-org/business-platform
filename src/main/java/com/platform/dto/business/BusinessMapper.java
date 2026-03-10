@@ -1,9 +1,12 @@
 package com.platform.dto.business;
 
+import com.platform.dto.employee.EmployeeResponseDTO;
 import com.platform.dto.service.ServiceResponseDTO;
+import com.platform.dto.user.UserResponseDTO;
 import com.platform.entity.Business;
 import com.platform.entity.BusinessWorkingHours;
 import com.platform.entity.ProvidedService;
+import com.platform.entity.User;
 
 import java.util.List;
 import java.util.Set;
@@ -120,6 +123,61 @@ public class BusinessMapper {
                 .workingHours(fromWorkingHoursDTOList(businessDTO.getBusinessWorkingHours()))
                 .providedServices(services)
 
+                .build();
+    }
+
+    public static BusinessResponseDTO toDTO(Business business, Double averageRating, List<ServiceResponseDTO> services, User owner) {
+        return BusinessResponseDTO.builder()
+                .id(business.getId())
+                .name(business.getName())
+                .slug(business.getSlug())
+                .description(business.getDescription())
+                .address(business.getAddress())
+                .city(business.getCity())
+                .phone(business.getPhone())
+                .website(business.getWebsite())
+                .logoUrl(business.getLogoUrl())
+                .coverImageUrl(business.getCoverImageUrl())
+                .ratingOverall(averageRating != null ? averageRating : 0.0)
+                .createdAt(business.getCreatedAt())
+                .updatedAt(business.getUpdatedAt())
+                .owner(toDTO(owner))
+                .businessWorkingHours(toWorkingHoursDTOList(business.getWorkingHours()))
+                .providedServices(services)
+
+                .build();
+    }
+
+    public static BusinessResponseDTO toDTO(Business business, Double averageRating, List<ServiceResponseDTO> services, List<EmployeeResponseDTO> empployeeList, User owner) {
+        return BusinessResponseDTO.builder()
+                .id(business.getId())
+                .name(business.getName())
+                .slug(business.getSlug())
+                .description(business.getDescription())
+                .address(business.getAddress())
+                .city(business.getCity())
+                .phone(business.getPhone())
+                .website(business.getWebsite())
+                .logoUrl(business.getLogoUrl())
+                .coverImageUrl(business.getCoverImageUrl())
+                .ratingOverall(averageRating != null ? averageRating : 0.0)
+                .createdAt(business.getCreatedAt())
+                .updatedAt(business.getUpdatedAt())
+                .owner(toDTO(owner))
+                .employeeList(empployeeList)
+                .businessWorkingHours(toWorkingHoursDTOList(business.getWorkingHours()))
+                .providedServices(services)
+
+                .build();
+    }
+
+    public static UserResponseDTO toDTO(User user) {
+        return UserResponseDTO.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 }
