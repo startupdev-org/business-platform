@@ -38,7 +38,6 @@ public class BusinessWorkingHours {
     @Column(name = "close_time", nullable = false)
     private LocalTime closeTime;
 
-    // Constructors
     public BusinessWorkingHours() {}
 
     public BusinessWorkingHours(Business business,

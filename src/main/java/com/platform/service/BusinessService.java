@@ -31,7 +31,7 @@ public class BusinessService {
     private final BusinessRepository businessRepository;
     private final ReviewRepository reviewRepository;
     private final UserService userService;
-    private final ServiceService servicesService;
+    private final ProvidedServicesService providedServicesService;
     private final EmployeeService employeeService;
 
     private static final String BUSINESS_EXCEPTION = "Business not found";
@@ -143,7 +143,7 @@ public class BusinessService {
     private BusinessResponseDTO toDTO(Business business) {
         Double avgRating = reviewRepository.getAverageRatingByBusiness(business.getId());
 
-        List<ServiceResponseDTO> businessServices = servicesService.getBusinessServices(business.getId());
+        List<ServiceResponseDTO> businessServices = providedServicesService.getBusinessServices(business.getId());
 
         User owner = userService.getUserById(business.getOwner().getId());
 
