@@ -2,28 +2,34 @@ package com.platform.entity;
 
 import com.platform.enums.ServiceDeliveryType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
-@Table(name = "businesses")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
+@Table(name = "businesses")
 public class Business {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private UUID id;
 
+    @ToString.Include
     @Column(nullable = false)
     private String name;
+
+    @Column()
+    private String businessEmail;
 
     @Column(nullable = false, unique = true)
     private String slug;
