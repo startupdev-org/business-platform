@@ -21,12 +21,13 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ServiceService {
+public class ProvidedServicesService {
 
     private final ServiceRepository serviceRepository;
     private final UserService userService;
-
     private final BusinessRepository businessRepository;
+
+    private static final String SERVICE_EXCEPTION = "Service not found";
 
     @Transactional
     public ServiceResponseDTO createService(UUID businessId, ServiceRequestDTO dto) {
@@ -54,7 +55,7 @@ public class ServiceService {
 
     public ServiceResponseDTO getService(UUID id) {
         ProvidedService providedService = serviceRepository.findById(id)
-                .orElseThrow(() -> new ServiceNotFoundException("Service not found"));
+                .orElseThrow(() -> new ServiceNotFoundException(SERVICE_EXCEPTION));
         return toDTO(providedService);
     }
 
@@ -85,7 +86,7 @@ public class ServiceService {
 
 
         ProvidedService providedService = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(SERVICE_EXCEPTION));
 
         providedService.setName(dto.getName());
         providedService.setDescription(dto.getDescription());
@@ -107,7 +108,7 @@ public class ServiceService {
         validateBusinessOwnership(business, currentUser);
 
         ProvidedService providedService = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(SERVICE_EXCEPTION));
 
         serviceRepository.delete(providedService);
     }
