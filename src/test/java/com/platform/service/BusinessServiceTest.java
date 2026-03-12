@@ -1,7 +1,11 @@
 package com.platform.service;
 
 import com.platform.entity.Business;
+import com.platform.entity.BusinessWorkingHours;
+import com.platform.enums.ServiceDeliveryType;
 import com.platform.repository.BusinessRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -15,8 +19,13 @@ import com.platform.exception.ResourceNotFoundException;
 import com.platform.repository.ReviewRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,6 +43,31 @@ class BusinessServiceTest {
     @Mock
     private ReviewRepository reviewRepository;
 
+    @Mock
+    private ProvidedServicesService providedServicesService;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private EmployeeService employeeService;
+
+    private static final String TEST_EMAIL = "test@gmail.com";
+
+    @BeforeEach
+    void setUp() {
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
+        lenient().when(authentication.getPrincipal()).thenReturn(TEST_EMAIL);
+        SecurityContextHolder.setContext(securityContext);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     // ----------------------------
     // Helpers
     // ----------------------------
@@ -41,6 +75,7 @@ class BusinessServiceTest {
     private User createBusinessAdmin() {
         return User.builder()
                 .id(UUID.randomUUID())
+                .email(TEST_EMAIL)
                 .role(User.UserRole.BUSINESS_ADMIN)
                 .build();
     }
@@ -48,6 +83,7 @@ class BusinessServiceTest {
     private User createPlatformAdmin() {
         return User.builder()
                 .id(UUID.randomUUID())
+                .email(TEST_EMAIL)
                 .role(User.UserRole.PLATFORM_ADMIN)
                 .build();
     }
@@ -66,14 +102,34 @@ class BusinessServiceTest {
     }
 
     private Business createBusiness(User owner) {
-        return Business.builder()
-                .id(UUID.randomUUID())
+
+        UUID businessId = UUID.randomUUID();
+
+        Business business = Business.builder()
+                .id(businessId)
                 .name("Test Business")
                 .slug("test-business")
+                .description("Test description")
+                .address("123 Test Street")
+                .city("Test City")
+                .phone("+1234567890")
+                .ratingOverall(0.0)
                 .owner(owner)
+                .employees(new ArrayList<>())
+                .locations(new ArrayList<>())
+                .workingHours(new ArrayList<>())
+                .providedServices(new ArrayList<>())
+                .features(new HashSet<>())
+                .serviceDeliveryType(ServiceDeliveryType.ON_SITE)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+
+        List<BusinessWorkingHours> hoursList = new ArrayList<>();
+        hoursList.add(new BusinessWorkingHours(business, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0)));
+        business.setWorkingHours(hoursList);
+
+        return business;
     }
 
     // ----------------------------
@@ -86,11 +142,20 @@ class BusinessServiceTest {
         User owner = createBusinessAdmin();
         BusinessRequestDTO dto = createRequest();
 
+        when(userService.getUserByUsername(owner.getEmail()))
+                .thenReturn(owner);
+
         when(businessRepository.save(any()))
                 .thenAnswer(i -> i.getArgument(0));
 
         when(reviewRepository.getAverageRatingByBusiness(any()))
                 .thenReturn(5.0);
+
+        when(userService.getUserById(owner.getId()))
+                .thenReturn(owner);
+
+        when(employeeService.getBusinessEmployeesList(any()))
+                .thenReturn(new ArrayList<>());
 
         BusinessResponseDTO response =
                 businessService.createBusiness(dto);
@@ -107,7 +172,12 @@ class BusinessServiceTest {
         User platformAdmin = createPlatformAdmin();
         BusinessRequestDTO dto = createRequest();
 
-        assertThrows(BusinessException.class, () -> businessService.createBusiness(dto));
+
+        when(userService.getUserByUsername(platformAdmin.getEmail()))
+                .thenReturn(platformAdmin);
+
+        assertThrows(BusinessException.class, () ->
+                businessService.createBusiness(dto));
 
         verify(businessRepository, never()).save(any());
     }
@@ -127,6 +197,16 @@ class BusinessServiceTest {
 
         when(reviewRepository.getAverageRatingByBusiness(any()))
                 .thenReturn(4.0);
+
+        when(userService.getUserById(owner.getId()))
+                .thenReturn(owner);
+
+        when(providedServicesService.getBusinessServices(any()))  // missing
+                .thenReturn(List.of());
+
+
+        when(employeeService.getBusinessEmployeesList(any()))
+                .thenReturn(new ArrayList<>());
 
         BusinessResponseDTO dto =
                 businessService.getBusinessDTOById(business.getId());
@@ -164,6 +244,15 @@ class BusinessServiceTest {
         when(reviewRepository.getAverageRatingByBusiness(any()))
                 .thenReturn(3.5);
 
+        when(providedServicesService.getBusinessServices(business.getId()))
+                .thenReturn(List.of());
+
+        when(userService.getUserById(owner.getId()))
+                .thenReturn(owner);
+
+        when(employeeService.getBusinessEmployeesList(business.getId()))
+                .thenReturn(List.of());
+
         BusinessResponseDTO dto =
                 businessService.getBusinessBySlug(business.getSlug());
 
@@ -178,14 +267,22 @@ class BusinessServiceTest {
     void listBusinesses_withCity() {
 
         User owner = createBusinessAdmin();
-        List<Business> businesses =
-                List.of(createBusiness(owner));
+        Business business = createBusiness(owner);
 
         when(businessRepository.findByCity("Chisinau"))
-                .thenReturn(businesses);
+                .thenReturn(List.of(business));
 
         when(reviewRepository.getAverageRatingByBusiness(any()))
                 .thenReturn(5.0);
+
+        when(providedServicesService.getBusinessServices(business.getId()))
+                .thenReturn(List.of());
+
+        when(userService.getUserById(owner.getId()))
+                .thenReturn(owner);
+
+        when(employeeService.getBusinessEmployeesList(business.getId()))
+                .thenReturn(List.of());
 
         Page<BusinessResponseDTO> page =
                 businessService.listBusinesses(
@@ -207,6 +304,9 @@ class BusinessServiceTest {
         User owner = createBusinessAdmin();
         Business business = createBusiness(owner);
 
+        when(userService.getUserByUsername(owner.getEmail()))
+                .thenReturn(owner);
+
         when(businessRepository.findById(business.getId()))
                 .thenReturn(Optional.of(business));
 
@@ -215,6 +315,15 @@ class BusinessServiceTest {
 
         when(reviewRepository.getAverageRatingByBusiness(any()))
                 .thenReturn(5.0);
+
+        when(providedServicesService.getBusinessServices(business.getId()))
+                .thenReturn(List.of());
+
+        when(userService.getUserById(owner.getId()))
+                .thenReturn(owner);
+
+        when(employeeService.getBusinessEmployeesList(business.getId()))
+                .thenReturn(List.of());
 
         BusinessResponseDTO dto =
                 businessService.updateBusiness(
@@ -231,16 +340,23 @@ class BusinessServiceTest {
         User owner = createBusinessAdmin();
         Business business = createBusiness(owner);
 
+        UUID businessId = business.getId();
+        BusinessRequestDTO request = createRequest();
+
         User otherUser = createBusinessAdmin();
+
+        when(userService.getUserByUsername(owner.getEmail()))
+                .thenReturn(otherUser);
 
         when(businessRepository.findById(business.getId()))
                 .thenReturn(Optional.of(business));
 
+
         assertThrows(
                 BusinessException.class,
                 () -> businessService.updateBusiness(
-                        business.getId(),
-                        createRequest()
+                        businessId,
+                        request
                 )
         );
     }
@@ -277,13 +393,23 @@ class BusinessServiceTest {
         User owner = createBusinessAdmin();
         owner.setId(userId);
 
-        List<Business> businesses = List.of(createBusiness(owner));
+        Business business = createBusiness(owner);
 
         when(businessRepository.findByOwnerId(userId))
-                .thenReturn(businesses);
+                .thenReturn(List.of(business));
 
         when(reviewRepository.getAverageRatingByBusiness(any()))
                 .thenReturn(4.0);
+
+        when(providedServicesService.getBusinessServices(business.getId()))
+                .thenReturn(List.of());
+
+        when(userService.getUserById(owner.getId()))
+                .thenReturn(owner);
+
+        when(employeeService.getBusinessEmployeesList(business.getId()))
+                .thenReturn(List.of());
+
 
         List<BusinessResponseDTO> result =
                 businessService.getUserBusinesses(userId);
