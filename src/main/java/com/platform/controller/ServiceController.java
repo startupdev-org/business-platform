@@ -47,8 +47,6 @@ public class ServiceController {
     @ApiResponse(responseCode = "404", description = "Service not found")
     @GetMapping("/{serviceId}")
     public ResponseEntity<ServiceResponseDTO> getService(
-            @Parameter(description = "Business UUID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable UUID businessId,
             @Parameter(description = "Service UUID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID serviceId) {
         ServiceResponseDTO service = providedServicesService.getService(serviceId);
