@@ -33,10 +33,12 @@ public class BusinessMapper {
     }
 
     public static List<BusinessWorkingHoursDTO> toWorkingHoursDTOList(List<BusinessWorkingHours> hours) {
+        if (hours == null || hours.isEmpty()) return List.of();
         return hours.stream().map(BusinessMapper::toDTO).toList();
     }
 
     public static List<BusinessWorkingHours> fromWorkingHoursDTOList(List<BusinessWorkingHoursDTO> hours) {
+        if (hours == null || hours.isEmpty()) return List.of();
         return hours.stream().map(BusinessMapper::toEntity).toList();
     }
 
