@@ -79,7 +79,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,    "/api/business/*/service")       .authenticated()
 
                         // ── 7. General business CRUD (catch-all for /api/business/**) ─
-                        .requestMatchers(HttpMethod.GET,    "/api/business/**")              .authenticated()
+                        .requestMatchers(HttpMethod.GET,    "/api/business/**")              .permitAll()
                         .requestMatchers(HttpMethod.POST,   "/api/business/**")              .hasRole(ROLE_BUSINESS_ADMIN)
                         .requestMatchers(HttpMethod.PUT,    "/api/business/**")              .hasRole(ROLE_BUSINESS_ADMIN)
                         .requestMatchers(HttpMethod.DELETE, "/api/business/**")              .hasRole(ROLE_BUSINESS_ADMIN)
