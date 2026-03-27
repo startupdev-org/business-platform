@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,10 +15,13 @@ import java.util.UUID;
 public interface BusinessRepository extends JpaRepository<Business, UUID> {
     Optional<Business> findBySlug(String slug);
     List<Business> findByCity(String city);
+    List<Business> findByBusinessCategory(String category);
     List<Business> findByOwnerId(UUID ownerId);
 
     @Query("SELECT b FROM Business b WHERE " +
            "LOWER(b.city) LIKE LOWER(CONCAT('%', :city, '%')) AND " +
            "b.ratingOverall >= :minRating")
     List<Business> findByFilters(@Param("city") String city, @Param("minRating") Double minRating);
+
+    List<Business> findByNameContainingIgnoreCase(String businessName);
 }

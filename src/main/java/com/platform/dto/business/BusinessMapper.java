@@ -173,6 +173,30 @@ public class BusinessMapper {
                 .build();
     }
 
+    public static BusinessResponseDTO toDTO(Business business, Double averageRating, List<ServiceResponseDTO> services, List<EmployeeResponseDTO> empployeeList, Set<BusinessFeatureDTO> featureList, User owner) {
+        return BusinessResponseDTO.builder()
+                .id(business.getId())
+                .name(business.getName())
+                .slug(business.getSlug())
+                .description(business.getDescription())
+                .address(business.getAddress())
+                .city(business.getCity())
+                .phone(business.getPhone())
+                .website(business.getWebsite())
+                .logoUrl(business.getLogoUrl())
+                .coverImageUrl(business.getCoverImageUrl())
+                .ratingOverall(averageRating != null ? averageRating : 0.0)
+                .createdAt(business.getCreatedAt())
+                .updatedAt(business.getUpdatedAt())
+                .owner(toDTO(owner))
+                .employeeList(empployeeList)
+                .businessWorkingHours(toWorkingHoursDTOList(business.getWorkingHours()))
+                .businessFeatures(featureList)
+                .providedServices(services)
+
+                .build();
+    }
+
     public static UserResponseDTO toDTO(User user) {
         return UserResponseDTO.builder()
                 .id(user.getId())

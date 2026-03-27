@@ -39,6 +39,10 @@ server:
   servlet:
     context-path: /
 
+supabase:
+  url: ${SUPABASE_URL}
+  service-key: ${SERVICE_ROLE_KEY}
+  bucket: business-assets
 
 cors:
   allowed-origins: ${ALLOWED_ORIGINS}

@@ -27,7 +27,7 @@ public class BusinessFeatureController {
 
     // GET all features for a business
     @GetMapping
-    public ResponseEntity<List<BusinessFeatureDTO>> getAll(@PathVariable UUID businessId) {
+    public ResponseEntity<Set<BusinessFeatureDTO>> getAll(@PathVariable UUID businessId) {
         return ResponseEntity.ok(featureService.getAllFeatures(businessId));
     }
 

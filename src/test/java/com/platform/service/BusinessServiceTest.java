@@ -1,7 +1,9 @@
 package com.platform.service;
 
-import com.platform.entity.Business;
-import com.platform.entity.BusinessWorkingHours;
+import com.platform.dto.business.BusinessFeatureDTO;
+import com.platform.dto.employee.EmployeeResponseDTO;
+import com.platform.dto.service.ServiceResponseDTO;
+import com.platform.entity.*;
 import com.platform.enums.ServiceDeliveryType;
 import com.platform.repository.BusinessRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -13,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.platform.dto.business.BusinessRequestDTO;
 import com.platform.dto.business.BusinessResponseDTO;
-import com.platform.entity.User;
 import com.platform.exception.BusinessException;
 import com.platform.exception.ResourceNotFoundException;
 import com.platform.repository.ReviewRepository;
@@ -51,6 +52,9 @@ class BusinessServiceTest {
 
     @Mock
     private EmployeeService employeeService;
+
+    @Mock
+    private FeatureService featureService;
 
     private static final String TEST_EMAIL = "test@gmail.com";
 
@@ -115,11 +119,11 @@ class BusinessServiceTest {
                 .phone("+1234567890")
                 .ratingOverall(0.0)
                 .owner(owner)
-                .employees(new ArrayList<>())
+                .employees(createEmployeeList())
                 .locations(new ArrayList<>())
                 .workingHours(new ArrayList<>())
                 .providedServices(new ArrayList<>())
-                .features(new HashSet<>())
+                .features(createFeatureList())
                 .serviceDeliveryType(ServiceDeliveryType.ON_SITE)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -130,6 +134,79 @@ class BusinessServiceTest {
         business.setWorkingHours(hoursList);
 
         return business;
+    }
+
+    private Set<BusinessFeature> createFeatureList() {
+        BusinessFeature featureOne = BusinessFeature.builder()
+                .name("Feature One")
+                .build();
+
+        BusinessFeature featureSecond = BusinessFeature.builder()
+                .name("Feature Second")
+                .build();
+
+        BusinessFeature featureThird = BusinessFeature.builder()
+                .name("Feature Third")
+                .build();
+
+        return Set.of(featureOne, featureSecond, featureThird);
+    }
+
+    private Set<BusinessFeatureDTO> createFeatureDTOList() {
+
+        BusinessFeatureDTO featureOne = BusinessFeatureDTO.builder()
+                .name("Feature One")
+                .build();
+
+        BusinessFeatureDTO featureSecond = BusinessFeatureDTO.builder()
+                .name("Feature Second")
+                .build();
+
+        BusinessFeatureDTO featureThird = BusinessFeatureDTO.builder()
+                .name("Feature Third")
+                .build();
+
+        return Set.of(featureOne, featureSecond, featureThird);
+    }
+
+    private List<Employee> createEmployeeList() {
+        Employee employeeOne = Employee.builder()
+                .name("Employee One")
+                .build();
+
+        Employee employeeSecond = Employee.builder()
+                .name("Employee Second")
+                .build();
+
+        Employee employeeThird = Employee.builder()
+                .name("Employee Third")
+                .build();
+
+        return List.of(employeeOne, employeeSecond, employeeThird);
+    }
+
+    private List<EmployeeResponseDTO> createEmployeeDTOList() {
+        EmployeeResponseDTO employeeOne = EmployeeResponseDTO.builder()
+                .name("EmployeeResponseDTO One")
+                .build();
+
+        EmployeeResponseDTO employeeSecond = EmployeeResponseDTO.builder()
+                .name("EmployeeResponseDTO Second")
+                .build();
+
+        EmployeeResponseDTO employeeThird = EmployeeResponseDTO.builder()
+                .name("Employee Third")
+                .build();
+
+        return List.of(employeeOne, employeeSecond, employeeThird);
+    }
+
+    private List<ServiceResponseDTO> createProvidedServicesDTOList() {
+        ServiceResponseDTO serviceOne = ServiceResponseDTO.builder()
+                .name("Service One")
+                .build();
+
+        return List.of(serviceOne);
     }
 
     // ----------------------------
@@ -202,17 +279,21 @@ class BusinessServiceTest {
                 .thenReturn(owner);
 
         when(providedServicesService.getBusinessServices(any()))  // missing
-                .thenReturn(List.of());
-
+                .thenReturn(createProvidedServicesDTOList());
 
         when(employeeService.getBusinessEmployeesList(any()))
-                .thenReturn(new ArrayList<>());
+                .thenReturn(createEmployeeDTOList());
+
+        when(featureService.getAllFeatures(any()))
+                .thenReturn(createFeatureDTOList());
 
         BusinessResponseDTO dto =
                 businessService.getBusinessDTOById(business.getId());
 
         assertEquals(business.getId(), dto.getId());
     }
+
+
 
     @Test
     void getBusinessDTOById_notFound() {

@@ -81,6 +81,9 @@ public class Business {
     @Enumerated(EnumType.STRING)
     private ServiceDeliveryType serviceDeliveryType;
 
+    @Enumerated(EnumType.STRING)
+    private BusinessCategoryType businessCategory;
+
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProvidedService> providedServices;
 

@@ -1,5 +1,6 @@
 package com.platform.service;
 
+import com.platform.dto.business.BusinessFeatureDTO;
 import com.platform.dto.business.BusinessMapper;
 import com.platform.dto.business.BusinessRequestDTO;
 import com.platform.dto.business.BusinessResponseDTO;
@@ -15,14 +16,14 @@ import com.platform.utils.SlugGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,7 @@ public class BusinessService {
     private final UserService userService;
     private final ProvidedServicesService providedServicesService;
     private final EmployeeService employeeService;
+    private final FeatureService featureService;
 
     private static final String BUSINESS_EXCEPTION = "Business not found";
 
@@ -79,12 +81,14 @@ public class BusinessService {
         return toDTO(business);
     }
 
-    public Page<BusinessResponseDTO> listBusinesses(String city, Double minRating, Pageable pageable) {
+    public Page<BusinessResponseDTO> listBusinesses(String city, Double minRating, String businessCategoryType, Pageable pageable) {
         List<Business> businesses;
         if (city != null && minRating != null) {
             businesses = businessRepository.findByFilters(city, minRating);
         } else if (city != null) {
             businesses = businessRepository.findByCity(city);
+        } else if(businessCategoryType != null){
+            businesses = businessRepository.findByBusinessCategory(businessCategoryType);
         } else {
             businesses = businessRepository.findAll();
         }
@@ -149,7 +153,9 @@ public class BusinessService {
 
         List<EmployeeResponseDTO> employeeList = employeeService.getBusinessEmployeesList(business.getId());
 
-        return BusinessMapper.toDTO(business, avgRating, businessServices, employeeList, owner);
+        Set<BusinessFeatureDTO> featureList = featureService.getAllFeatures(business.getId());
+
+        return BusinessMapper.toDTO(business, avgRating, businessServices, employeeList, featureList, owner);
     }
 
     private User getUser() {
@@ -160,5 +166,15 @@ public class BusinessService {
 
     private User getUserByUsername(String username) {
         return userService.getUserByUsername(username);
+    }
+
+    public Page<BusinessResponseDTO> listBusinessesByQuery(String query, PageRequest pageable) {
+
+        List<Business> businesses = businessRepository.findByNameContainingIgnoreCase(query);
+
+        return new PageImpl<>(
+                businesses.stream().map(this::toDTO).toList(),
+                pageable,
+                businesses.size());
     }
 }

@@ -38,11 +38,26 @@ public class BusinessController {
             @RequestParam(required = false) String city,
             @Parameter(description = "Filter by minimum rating", example = "4.0")
             @RequestParam(required = false) Double minRating,
+            @Parameter(description = "Filter by category", example = "BARBERSHOP")
+            @RequestParam(required = false) String businessCategory,
             @Parameter(description = "Page number (0-based)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "10")
             @RequestParam(defaultValue = "10") int size) {
-        Page<BusinessResponseDTO> businesses = businessService.listBusinesses(city, minRating, PageRequest.of(page, size));
+        Page<BusinessResponseDTO> businesses = businessService.listBusinesses(city, minRating, businessCategory, PageRequest.of(page, size));
+        return ResponseEntity.ok(businesses);
+    }
+
+    @Operation(summary = "List businesses by query", description = "Returns a paginated list of businesses, filtered by query")
+    @ApiResponse(responseCode = "200", description = "Businesses retrieved successfully")
+    @GetMapping("/query")
+    public ResponseEntity<Page<BusinessResponseDTO>> listBusinesses(
+            @RequestParam(name = "query") String query,
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+        Page<BusinessResponseDTO> businesses = businessService.listBusinessesByQuery(query, PageRequest.of(page, size));
         return ResponseEntity.ok(businesses);
     }
 
