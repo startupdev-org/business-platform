@@ -9,22 +9,23 @@ import com.platform.exception.BusinessFeatureAlreadyExistsException;
 import com.platform.exception.BusinessOwnershipException;
 import com.platform.exception.UserNotEnabledException;
 import com.platform.repository.BusinessFeatureRepository;
+import com.platform.repository.BusinessRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FeatureService {
 
     private final BusinessFeatureRepository featureRepository;
-    private final BusinessService businessService;
+    private final BusinessRepository businessRepository;
     private final UserService userService;
 
-    public List<BusinessFeatureDTO> getAllFeatures(UUID businessId) {
-        Business business = businessService.getBusinessById(businessId);
+    public Set<BusinessFeatureDTO> getAllFeatures(UUID businessId) {
+        Business business = getBusinessById(businessId);
 
         return featureRepository.findByBusinessId(business.getId())
                 .stream()
@@ -32,8 +33,7 @@ public class FeatureService {
                         .featureId(f.getFeatureId())
                         .businessId(f.getBusiness().getId())
                         .name(f.getName())
-                        .build())
-                .toList();
+                        .build()).collect(Collectors.toSet());
     }
 
     public BusinessFeatureDTO addFeature(BusinessFeatureDTO request) {
@@ -42,7 +42,7 @@ public class FeatureService {
         if (!user.isEnabled())
             throw new UserNotEnabledException("User is not enabled");
 
-        Business business = businessService.getBusinessById(request.getBusinessId());
+        Business business = getBusinessById(request.getBusinessId());
 
         if (business.isNotOwner(user)) {
             throw new BusinessOwnershipException("Cannot add a new feature to a business you do not own");
@@ -70,7 +70,7 @@ public class FeatureService {
     }
 
     public void removeFeature(UUID businessId, Long featureId) {
-        Business business = businessService.getBusinessById(businessId);
+        Business business = getBusinessById(businessId);
 
         if (!Business.hasFeatureById(business, featureId)) {
             throw new BusinessException("Cannot remove a feature from another business");
@@ -83,5 +83,10 @@ public class FeatureService {
     public BusinessFeature getFeatureById(Long featureId) {
         return featureRepository.findById(featureId)
                 .orElseThrow(() -> new RuntimeException("Feature not found"));
+    }
+
+    private Business getBusinessById(UUID id) {
+        return businessRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Business not found"));
     }
 }

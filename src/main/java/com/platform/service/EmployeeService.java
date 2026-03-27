@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +29,13 @@ public class EmployeeService {
     private final BusinessRepository businessRepository;
     private final UserService userService;
 
+    private static final String BUSINESS_EXCEPTION = "Business not found";
+    private static final String EMPLOYEE_NOT_FOUND_EXCEPTION = "Employee not found";
+
     @Transactional
     public EmployeeResponseDTO createEmployee(UUID businessId, EmployeeRequestDTO dto) {
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
 
         User currentUser = getUser();
 
@@ -52,7 +54,7 @@ public class EmployeeService {
 
     public EmployeeResponseDTO getEmployee(UUID id) {
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(EMPLOYEE_NOT_FOUND_EXCEPTION));
         return toDTO(employee);
     }
 
@@ -94,12 +96,12 @@ public class EmployeeService {
     @Transactional
     public EmployeeResponseDTO updateEmployee(UUID businessId, UUID employeeId, EmployeeRequestDTO dto, User currentUser) {
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
 
         validateBusinessOwnership(business, currentUser);
 
         Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(EMPLOYEE_NOT_FOUND_EXCEPTION));
 
         employee.setName(dto.getName());
         employee.setPhotoUrl(dto.getPhotoUrl());
@@ -114,12 +116,12 @@ public class EmployeeService {
     @Transactional
     public void deleteEmployee(UUID businessId, UUID employeeId, User currentUser) {
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(BUSINESS_EXCEPTION));
 
         validateBusinessOwnership(business, currentUser);
 
         Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(EMPLOYEE_NOT_FOUND_EXCEPTION));
 
         employeeRepository.delete(employee);
     }
