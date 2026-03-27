@@ -369,6 +369,7 @@ class BusinessServiceTest {
                 businessService.listBusinesses(
                         "Chisinau",
                         null,
+                        BusinessCategoryType.BARBERSHOP.name(),
                         PageRequest.of(0, 10)
                 );
 
